@@ -13,6 +13,7 @@
  box : {
  vertex3A : THREE.vector3(0, 0, 0),
  vertex3B : THREE.vector3(100, 100, 100)
+ objects : THREE object
  }
  */
 
@@ -40,20 +41,19 @@ function areIntersectedSphere(sphereA, sphereB) {
     return sphereA.radius + sphereB.radius > dist;
 }
 
-function randomOnAxis(min, max) {
-    return Math.random() * (max - min) + min;
-}
-
 function randomPoint3(minX, maxX, minY, maxY, minZ, maxZ) {
-    return new THREE.Vector3(randomOnAxis(minX, maxX), randomOnAxis(minY, maxY), randomOnAxis(minZ, maxZ));
+    return new THREE.Vector3(randomBetween(minX, maxX), randomBetween(minY, maxY), randomBetween(minZ, maxZ));
 }
 
 function randomPointInBox(box) {
     return randomPoint3(box.vertex3A.x, box.vertex3B.x, box.vertex3A.y, box.vertex3B.y, box.vertex3A.z, box.vertex3B.z);
 }
 
-function randomBetween(minR, maxR) {
-    return minR + Math.random() * (maxR - minR);
+function randomBetween(min, max) {
+    var rand = min + Math.random() * (max - min);
+    //rand = Math.round(rand);
+    rand = parseFloat(rand.toFixed(2));
+    return rand;
 }
 
 function randomSphereInBox(minR, maxR, box) {
@@ -104,11 +104,16 @@ function hasIntersection(spheres, sphere) {
 
 function randomPointInSphere(sphere) {
 
-    var point = new THREE.Vector3(
-        ( Math.random() - 0.5 ) * 2 * sphere.radius,
-        ( Math.random() - 0.5 ) * 2 * sphere.radius,
-        ( Math.random() - 0.5 ) * 2 * sphere.radius
-    );
+    var x, y, z, theta, gama;
+
+    theta = randomBetween(0, Math.PI);
+    gama = randomBetween(0, 2 * Math.PI);
+
+    x = sphere.radius * Math.sin(theta) * Math.cos(gama);
+    y = sphere.radius * Math.sin(theta) * Math.sin(gama);
+    z = sphere.radius * Math.cos(theta);
+
+    var point = new THREE.Vector3(x, y, z);
 
     //movePoint3ByVector(point, sphere.centre3);
 
@@ -133,23 +138,29 @@ function randomGenAndPut() {
 
     var box = {
         vertex3A: new THREE.Vector3(0, 0, 0),
-        vertex3B: new THREE.Vector3(500, 500, 500)
+        vertex3B: new THREE.Vector3(500, 500, 500),
+        objects: []
     };
+
+    //moveBox(box, 100, 100, 100);
 
     var minR = 20, maxR = 30;
     var minVertices = 4, maxVertices = 30;
     var randomSphere = randomSphereInBoxNonIntersected(minR, maxR, box);
 
-    var materials = [
-        //new THREE.MeshLambertMaterial( { ambient: 0xff0000}),//, map: map } ),
-        new THREE.MeshLambertMaterial({ambient: Math.random() * 16777215}),
-        new THREE.MeshBasicMaterial({color: Math.random() * 16777215, wireframe: true, transparent: true, opacity: 1})
-    ];
     for (var i = 0; i < 100; i++) {
+        var materials = [
+            //new THREE.MeshLambertMaterial( { ambient: 0xff0000}),//, map: map } ),
+            new THREE.MeshLambertMaterial({ambient: Math.random() * 16777215}),
+            new THREE.MeshBasicMaterial({color: Math.random() * 16777215, wireframe: true, transparent: true, opacity: 1})
+        ];
         var sphere = randomSphere();
         var convex = randomConvexInSphere(minVertices, maxVertices, sphere);
         var object = THREE.SceneUtils.createMultiMaterialObject(convex, materials);
         object.position.set(sphere.centre3.x, sphere.centre3.y, sphere.centre3.z);
         scene.add(object);
+        box.objects.push(object);
     }
+
+    return box;
 }

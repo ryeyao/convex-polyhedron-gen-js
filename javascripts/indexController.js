@@ -7,16 +7,17 @@ animate();
 
 function init() {
 
-    container = document.createElement( 'div' );
-    document.body.appendChild( container );
+    //container = document.createElement( 'div' );
+    container = document.getElementById('3dcontainer');
+    //document.body.appendChild( container );
 
-    camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 2000 );
-    camera.position.y = 400;
+    camera = new THREE.PerspectiveCamera( 90, window.innerWidth / window.innerHeight, 1, 5000 );
+    camera.position.z = 400;
 
     scene = new THREE.Scene();
     scene.position.x = -500;
     scene.position.y = -500;
-    scene.position.z = -500;
+    //scene.position.z = -500;
 
     var light, object, materials, containerMaterials;
 
@@ -124,14 +125,16 @@ function animate() {
 
 function render() {
 
-    var timer = Date.now() * 0.0001;
+    var timer = Date.now() * 0.001;
 
-    camera.position.x = Math.cos( timer ) * 1000;
-    camera.position.z = Math.sin( timer ) * 1000;
+    camera.position.x = Math.cos( timer ) * 1300;
+    camera.position.y = Math.sin( timer ) * 1300;
+    camera.position.z = Math.sin( timer ) * 1300;
     //camera.position.x = 800;
     //camera.position.z = 800;
 
     camera.lookAt( scene.position );
+    //camera.lookAt({x: -250, y: 0, z: -250});
 
     //for ( var i = 0, l = scene.children.length; i < l; i ++ ) {
     //
