@@ -80,12 +80,12 @@ function randomSphereInBoxNonIntersected(minR, maxR, box) {
             var sphere = randomSphereInBox(minR, maxR, box);
             if (spheres.length > 0 && hasIntersection(spheres, sphere)) {
                 intersectionCount++;
-                console.log(intersectionCount + ' intersection detected.');
+                // console.log(intersectionCount + ' intersection detected.');
                 continue;
             }
 
             spheres.push(sphere);
-            console.log('Non-intersected spheres: ' + spheres.length);
+            // console.log('Non-intersected spheres: ' + spheres.length);
             return sphere;
         }
     }
