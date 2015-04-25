@@ -51,16 +51,16 @@ function init() {
     scene.add( object );
 
     // cube
-
+    var len = 150
     var points = [
-        new THREE.Vector3( 500, 500, 500 ),
-        new THREE.Vector3( 500, 500, 0 ),
-        new THREE.Vector3( 0, 500, 0 ),
-        new THREE.Vector3( 0, 500, 500 ),
-        new THREE.Vector3( 500, 0, 500 ),
-        new THREE.Vector3( 500, 0, 0 ),
+        new THREE.Vector3( 150, 150, 150 ),
+        new THREE.Vector3( 150, 150, 0 ),
+        new THREE.Vector3( 0, 150, 0 ),
+        new THREE.Vector3( 0, 150, 150 ),
+        new THREE.Vector3( 150, 0, 150 ),
+        new THREE.Vector3( 150, 0, 0 ),
         new THREE.Vector3( 0, 0, 0 ),
-        new THREE.Vector3( 0, 0, 500 )
+        new THREE.Vector3( 0, 0, 150 )
     ];
 
     containerMaterials = [
@@ -78,7 +78,7 @@ function init() {
     //randomGenAndPut();
 
 
-    object = new THREE.AxisHelper( 500 );
+    object = new THREE.AxisHelper( 150 );
     object.position.set( 0, 0, 0 );
     scene.add( object );
 
@@ -127,9 +127,9 @@ function render() {
 
     var timer = Date.now() * 0.001;
 
-    camera.position.x = Math.cos( timer ) * 1300;
-    camera.position.y = Math.sin( timer ) * 1300;
-    camera.position.z = Math.sin( timer ) * 1300;
+    camera.position.x = Math.cos( timer ) * 130;
+    camera.position.y = Math.sin( timer ) * 130;
+    camera.position.z = Math.sin( timer ) * 130;
     //camera.position.x = 800;
     //camera.position.z = 800;
 

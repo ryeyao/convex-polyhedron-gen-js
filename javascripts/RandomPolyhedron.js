@@ -73,14 +73,14 @@ function randomSphereInBoxNonIntersected(minR, maxR, box) {
 
     var spheres = [];
     var intersectionCount = 0;
-    var MAX_ITER_COUNT = 1000;
+    var MAX_ITER_COUNT = 10;
 
     return function () {
         for (var i = 0; i < MAX_ITER_COUNT; i++) {
             var sphere = randomSphereInBox(minR, maxR, box);
             if (spheres.length > 0 && hasIntersection(spheres, sphere)) {
                 intersectionCount++;
-                console.log(intersectionCount + ' intersection detected.');
+                //console.log(intersectionCount + ' intersection detected.');
                 continue;
             }
 
@@ -134,33 +134,50 @@ function randomConvexInSphere(minVertices, maxVertices, sphere) {
     return new THREE.ConvexGeometry(points);
 }
 
+function calcVolumeOfSphere(sphere) {
+  return sphere.radius * sphere.radius * sphere.radius * 3.14 * 4 / 3;
+}
+
+function calcVolumeOfBox(box) {
+  return (box.vertex3B.x - box.vertex3A.x) * (box.vertex3B.y - box.vertex3A.y) * (box.vertex3B.z - box.vertex3A.z);
+}
+
 function randomGenAndPut() {
 
     var box = {
         vertex3A: new THREE.Vector3(0, 0, 0),
-        vertex3B: new THREE.Vector3(500, 500, 500),
+        vertex3B: new THREE.Vector3(150, 150, 150),
         objects: []
     };
+    var boxVolume = calcVolumeOfBox(box);
 
     //moveBox(box, 100, 100, 100);
 
-    var minR = 20, maxR = 30;
-    var minVertices = 4, maxVertices = 30;
+    var minR = 10, maxR = 15;
+    var minVertices = 4, maxVertices = 4;
     var randomSphere = randomSphereInBoxNonIntersected(minR, maxR, box);
+    var rate = 0;
+    var totalVolume = 0;
 
-    for (var i = 0; i < 100; i++) {
+    for (var i = 0; i < 500000; i++) {
         var materials = [
             //new THREE.MeshLambertMaterial( { ambient: 0xff0000}),//, map: map } ),
             new THREE.MeshLambertMaterial({ambient: Math.random() * 16777215}),
             new THREE.MeshBasicMaterial({color: Math.random() * 16777215, wireframe: true, transparent: true, opacity: 1})
         ];
         var sphere = randomSphere();
+        if (sphere == undefined) continue;
+        totalVolume += calcVolumeOfSphere(sphere);
+        console.log("Rate: " + totalVolume / boxVolume);
         var convex = randomConvexInSphere(minVertices, maxVertices, sphere);
         var object = THREE.SceneUtils.createMultiMaterialObject(convex, materials);
         object.position.set(sphere.centre3.x, sphere.centre3.y, sphere.centre3.z);
         scene.add(object);
         box.objects.push(object);
     }
+
+    console.log("Sphere V: " + totalVolume);
+    console.log("Box V: " + boxVolume);
 
     return box;
 }
