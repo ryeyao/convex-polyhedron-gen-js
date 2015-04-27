@@ -12,12 +12,17 @@ function init() {
     //document.body.appendChild( container );
 
     camera = new THREE.PerspectiveCamera( 90, window.innerWidth / window.innerHeight, 1, 5000 );
-    camera.position.z = 400;
+    // camera.position.z = 400;
+    camera.position.set(250,220,250);
+
 
     scene = new THREE.Scene();
-    scene.position.x = -500;
-    scene.position.y = -500;
+    // scene.position.x = -500;
+    // scene.position.y = -500;
+    scene.position.x = 0;
+    scene.position.y = 0;
     //scene.position.z = -500;
+    camera.lookAt(scene.position);
 
     var light, object, materials, containerMaterials;
 
@@ -48,7 +53,7 @@ function init() {
 
     object = THREE.SceneUtils.createMultiMaterialObject( new THREE.ConvexGeometry( points ), materials );
     object.position.set( 0, 0, 0 );
-    scene.add( object );
+    // scene.add( object );
 
     // cube
     var len = 150
@@ -68,13 +73,21 @@ function init() {
         new THREE.MeshBasicMaterial( { color: 0xffffff, wireframe: true, transparent: true, opacity: 1 } )
     ];
 
+    var cylinder_geometry = new THREE.CylinderGeometry(75, 75, 150, 32);
+    var cylinderVolume = calcVolumeOfCylinder(cylinder_geometry);
+
+    // Cylinder container
+    object = new THREE.SceneUtils.createMultiMaterialObject( cylinder_geometry, containerMaterials );
+    object.position.set(0,60,0);
+    // scene.add(object);
+
+    // Cube container
     object = THREE.SceneUtils.createMultiMaterialObject( new THREE.ConvexGeometry( points ), containerMaterials );
     object.position.set( 0, 0, 0 );
     scene.add( object );
 
     // random convex
     randomGenAndPut();
-    //randomGenAndPut();
     //randomGenAndPut();
 
 
@@ -98,6 +111,7 @@ function init() {
 
 
     window.addEventListener( 'resize', onWindowResize, false );
+    // setTimeout(randomGenAndPut, 1);
 
 }
 
@@ -127,14 +141,15 @@ function render() {
 
     var timer = Date.now() * 0.001;
 
-    camera.position.x = Math.cos( timer ) * 130;
-    camera.position.y = Math.sin( timer ) * 130;
-    camera.position.z = Math.sin( timer ) * 130;
+    // camera.position.x = Math.cos( timer ) * 230;
+    // camera.position.y = Math.sin( timer ) * 300;
+    // // camera.position.y = 0;
+    // camera.position.z = Math.sin( timer ) * 230;
     //camera.position.x = 800;
     //camera.position.z = 800;
 
-    camera.lookAt( scene.position );
-    //camera.lookAt({x: -250, y: 0, z: -250});
+    // camera.lookAt( scene.position );
+    // camera.lookAt({x: 100, y: -100, z: 150});
 
     //for ( var i = 0, l = scene.children.length; i < l; i ++ ) {
     //
