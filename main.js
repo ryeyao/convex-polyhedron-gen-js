@@ -15,7 +15,7 @@ app.on('window-all-closed', function() {
 app.on('ready', function() {
   mainWindow = new BrowserWindow({width: 1024, height: 768, center: true, resizable: false});
   // and load the index.html of the app.
-  mainWindow.loadUrl('file://' + __dirname + '/index.html');
+  mainWindow.loadUrl('file://' + __dirname + '/shapes.html');
 
   // Emitted when the window is closed.
   mainWindow.on('closed', function() {

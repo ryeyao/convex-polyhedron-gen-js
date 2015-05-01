@@ -88,8 +88,9 @@ function init() {
     scene.add( object );
 
     // random convex
-    randomGenAndPut();
     //randomGenAndPut();
+    //randomGenAndPutInSubBox();
+    randomGenAndPutInSubBox2();
 
 
     object = new THREE.AxisHelper( 150 );
@@ -140,17 +141,17 @@ function animate() {
 
 function render() {
 
-    var timer = Date.now() * 0.001;
+    var timer = Date.now() * 0.0006;
 
-    // camera.position.x = Math.cos( timer ) * 230;
-    // camera.position.y = Math.sin( timer ) * 300;
+    camera.position.x = Math.cos( timer ) * 200;
+    //camera.position.y = Math.sin( timer ) * 200;
     // // camera.position.y = 0;
-    // camera.position.z = Math.sin( timer ) * 230;
+    camera.position.z = Math.sin( timer ) * 200;
     //camera.position.x = 800;
     //camera.position.z = 800;
 
-    // camera.lookAt( scene.position );
-    // camera.lookAt({x: 100, y: -100, z: 150});
+    //camera.lookAt( scene.position );
+    camera.lookAt({x: 75, y: 75, z: 75});
 
     //for ( var i = 0, l = scene.children.length; i < l; i ++ ) {
     //
