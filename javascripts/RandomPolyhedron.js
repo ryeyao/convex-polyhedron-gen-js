@@ -344,6 +344,10 @@ function randomConvexNonIntersected(minR, maxR, minVertices, maxVertices, contai
 
                 if (needRegenerate) {
                     convex = getBaseTetrahedronInSphere(sphere);
+                    if (randomBetween(0, 1) < 0.5) {
+                        convex.vertices.push(randomPointInSphere(sphere));
+                        convex = new THREE.ConvexGeometry(convex.vertices);
+                    }
                 }
                 convex.edges = extractEdges(convex.faces, 3);
 

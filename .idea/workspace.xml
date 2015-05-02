@@ -3,9 +3,6 @@
   <component name="ChangeListManager">
     <list default="true" id="f3f9cd92-c03e-4b84-91f8-ab352d5eabe9" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/javascripts/RandomPolyhedron.js" afterPath="$PROJECT_DIR$/javascripts/RandomPolyhedron.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/cfg.json" afterPath="$PROJECT_DIR$/cfg.json" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/main.js" afterPath="$PROJECT_DIR$/main.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/shapes.html" afterPath="$PROJECT_DIR$/shapes.html" />
     </list>
     <ignored path="convex-polyhedron-gen-js.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -32,8 +29,8 @@
       <file leaf-file-name="RandomPolyhedron.js" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/javascripts/RandomPolyhedron.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.735768" vertical-offset="26660" max-vertical-offset="33405">
-              <caret line="1823" column="4" selection-start-line="1823" selection-start-column="4" selection-end-line="1823" selection-end-column="4" />
+            <state vertical-scroll-proportion="0.39742213" vertical-offset="4850" max-vertical-offset="33465">
+              <caret line="348" column="73" selection-start-line="348" selection-start-column="73" selection-end-line="348" selection-end-column="73" />
               <folding>
                 <element signature="n#!!doc" expanded="true" />
               </folding>
@@ -427,8 +424,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/javascripts/RandomPolyhedron.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.735768" vertical-offset="26660" max-vertical-offset="33405">
-          <caret line="1823" column="4" selection-start-line="1823" selection-start-column="4" selection-end-line="1823" selection-end-column="4" />
+        <state vertical-scroll-proportion="0.39742213" vertical-offset="4850" max-vertical-offset="33465">
+          <caret line="348" column="73" selection-start-line="348" selection-start-column="73" selection-end-line="348" selection-end-column="73" />
           <folding>
             <element signature="n#!!doc" expanded="true" />
           </folding>
