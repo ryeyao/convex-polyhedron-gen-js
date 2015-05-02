@@ -58,7 +58,7 @@
 		document.getElementById( 'viewport' ).appendChild( physics_stats.domElement );
 		
 		scene = new Physijs.Scene({ fixedTimeStep: 1 / 120 });
-		scene.setGravity(new THREE.Vector3( 0, -30, 0 ));
+		scene.setGravity(new THREE.Vector3( 0, -1, 0 ));
 		scene.addEventListener(
 			'update',
 			function() {
@@ -122,21 +122,108 @@
 
 //		randomGenAndPutInSubBox3();
 
+		var ipc = require('ipc');
+//		ipc.send('options', 'options');
+//		ipc.on('options', function(event, options) {
+
+		var recurCount = 10;
 		readFile("cfg.json", function (options) {
 
+			var containerVolume = 0;
 //			console.log(JSON.stringify(options));
 			options = JSON.parse(options);
+			var use_engine = false;
+
+			var randomFunc, initFunc;
 			if (options.container.type == "cylinder") {
-				initCylinderScene(options);
-				requestAnimationFrame( render );
+				containerVolume = calcVolumeOfCylinder(new THREE.CylinderGeometry(options.container.options.radius, options.container.options.radius, options.container.options.height));
+				initFunc = initCylinderScene;
+				requestAnimationFrame(render);
 				scene.simulate();
-				randomGenAndPutInCylinder(options);
+				randomFunc = randomGenAndPutInCylinder;
 			} else {
-				initBoxScene(options);
-				requestAnimationFrame( render );
+				containerVolume = calcVolumeOfBox({
+					vertex3A: new THREE.Vector3(0, 0, 0),
+					vertex3B: new THREE.Vector3(options.container.options.edge_len, options.container.options.edge_len, options.container.options.edge_len)
+				});
+				initFunc = initBoxScene;
+				requestAnimationFrame(render);
 				scene.simulate();
-				randomGenAndPutInSubBox3(options);
+//				randomGenAndPutInSubBox3(options);
+				randomFunc = randomGenAndPut;
+				outPut(randomGenAndPutInSubBox3(options), containerVolume);
 			}
+
+
+//			if (options.container.type == "cylinder") {
+//
+//			} else {
+//				randomGenAndPut(options);
+//				outPut(containerVolume);
+//			}
+
+			var mainFunc = function() {
+
+				console.log("RecurCount: " + recurCount);
+				recurCount--;
+				// Get current geometries
+				if (use_engine) {
+					for (var i = 9; i < scene.children.length; i++) {
+						var curr = scene.children[i].geometry;
+						var curr_matrix = scene.children[i].matrix;
+
+						curr.applyMatrix(curr_matrix);
+					}
+				}
+
+				initFunc(options);
+				outPut(randomFunc(options), containerVolume);
+				scene.setGravity(new THREE.Vector3( randomBetween(-10, 10), randomBetween(-10, 10), randomBetween(-10, 10) ));
+
+
+//				return function () {
+					if (recurCount > 0) {
+//						console.log("RecurCount: " + recurCount);
+						setTimeout(mainFunc, recurCount * 1000);
+					} else {
+						var result = "";
+						for (var i = 9; i < scene.children.length; i++) {
+							var curr = scene.children[i].geometry;
+							var curr_matrix = scene.children[i].matrix;
+
+							curr.applyMatrix(curr_matrix);
+
+							var points = [];
+							for (var j = 0; j < curr.vertices.length; j++) {
+								points.push([curr.vertices[j].x, curr.vertices[j].y, curr.vertices[j].z]);
+							}
+
+							var faces = [];
+							for (var j = 0; j < curr.faces.length; j++) {
+								faces.push([curr.faces[j].a, curr.faces[j].b, curr.faces[j].c]);
+							}
+
+							result +=
+									"polyhedron("
+									+ "points="
+									+ JSON.stringify(points)
+									+ ","
+									+ "faces="
+									+ JSON.stringify(faces)
+									+ ""
+									+ ");\n";
+
+						}
+
+						if (ipc.sendSync('synchronous-message', result) == "close") { // prints "pong"
+
+//							window.close();
+						}
+					}
+//				}
+
+			};
+			mainFunc();
 
 		});
 
@@ -169,57 +256,6 @@
 //				document.getElementById('shapecount').textContent = i + ' shapes created';
 //			}
 //		}
-		setTimeout(function() {
-
-			// Get current geometries
-
-			var result = "";
-			for (var i = 9; i < scene.children.length; i++) {
-				var curr = scene.children[i].geometry;
-				var curr_matrix = scene.children[i].matrix;
-
-				curr.applyMatrix(curr_matrix);
-
-				var points = [];
-				for (var j = 0; j < curr.vertices.length; j++) {
-					points.push([curr.vertices[j].x, curr.vertices[j].y, curr.vertices[j].z]);
-				}
-
-				var faces = [];
-				for (var j = 0; j < curr.faces.length; j++) {
-					faces.push([curr.faces[j].a, curr.faces[j].b, curr.faces[j].c]);
-				}
-
-				result +=
-						"polyhedron("
-						+ "points="
-						+ JSON.stringify(points)
-						+ ","
-						+ "faces="
-						+ JSON.stringify(faces)
-						+ ""
-						+ ");\n";
-
-			}
-
-//			console.log(result);
-
-//			var blob = new Blob([result], {type: 'text/plain'});
-//			saveAs(blob, "result.me");
-//			downloadFile(result);
-
-			var ipc = require('ipc');
-			if (ipc.sendSync('synchronous-message', result) == "close") { // prints "pong"
-
-//				window.close();
-			}
-
-//			ipc.on('asynchronous-reply', function(arg) {
-//				console.log(arg); // prints "pong"
-//			});
-//			ipc.send('asynchronous-message', 'ping');
-
-		}, 30000);
 
 	};
 	

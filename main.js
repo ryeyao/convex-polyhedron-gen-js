@@ -12,6 +12,8 @@ app.on('window-all-closed', function() {
   //}
 })
 
+var fs = require('fs');
+var ipc = require('ipc');
 app.on('ready', function() {
   mainWindow = new BrowserWindow({width: 1024, height: 768, center: true, resizable: false, show: true});
   // and load the index.html of the app.
@@ -26,17 +28,25 @@ app.on('ready', function() {
   });
 })
 
-var ipc = require('ipc');
-ipc.on('synchronous-message', function(event, arg) {
+
+ipc.on('synchronous-message', function(event, content) {
   //console.log(arg);  // prints "ping"
 
-  var fs = require('fs');
-  fs.writeFile('result', arg, function(err) {
+  fs.writeFile('result', content, function(err) {
     console.log(err);
   });
 
   event.returnValue = 'close';
 });
 
-console.log(process.argv);
+ipc.on('options', function(event, msg) {
+
+  console.log(msg);
+  var cft_path = process.argv[2];
+  var content = fs.readFileSync(cft_path);
+  console.log(JSON.parse(content));
+  event.sender.send("options", content);
+});
+
+
 
