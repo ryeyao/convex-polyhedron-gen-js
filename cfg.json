@@ -1,6 +1,6 @@
 {
   "container": {
-    "type": "cylinder",
+    "type": "cube",
     "options": {
       "height": 150,
       "radius": 75,

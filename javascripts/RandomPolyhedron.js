@@ -967,7 +967,7 @@ function splitBoxTo5Tetrahedrons(box) {
 
     // right
     var vertices2 = [];
-    vertices2.push(box.vertex3B.clone());
+    vertices2.push(new THREE.Vector3(box.vertex3A.x + len, box.vertex3A.y + len, box.vertex3A.z + len));
     vertices2.push(new THREE.Vector3(box.vertex3A.x + len, box.vertex3A.y + len, box.vertex3A.z));
     vertices2.push(new THREE.Vector3(box.vertex3A.x, box.vertex3A.y + len, box.vertex3A.z + len));
     vertices2.push(new THREE.Vector3(box.vertex3A.x + len, box.vertex3A.y, box.vertex3A.z + len));
@@ -1339,15 +1339,20 @@ function randomGenAndPutInSubBox3(options) {
     var interectionCount = 0;
 
 
-    for (var i = 0; i < container.vertex3B.x; i+=subStep) {
+    // Iter through sub boxes
+    var xitercount = Math.floor((container.vertex3B.x - container.vertex3A.x) / subStep),
+        yitercount = Math.floor((container.vertex3B.y - container.vertex3A.y) / subStep),
+        zitercount = Math.floor((container.vertex3B.z - container.vertex3A.z) / subStep);
 
-        for (var j = 0; j < container.vertex3B.x; j+=subStep) {
+    for (var i = 0; i < xitercount; i++) {
 
-            for (var k = 0; k < container.vertex3B.x; k+=subStep) {
+        for (var j = 0; j < yitercount; j++) {
+
+            for (var k = 0; k < zitercount; k++) {
 
                 var sub = {
-                    vertex3A: new THREE.Vector3(i, j, k),
-                    vertex3B: new THREE.Vector3(i + subStep, j + subStep, k + subStep)
+                    vertex3A: new THREE.Vector3(container.vertex3A.x + i * subStep, container.vertex3A.y + j * subStep, container.vertex3A.z + k * subStep),
+                    vertex3B: new THREE.Vector3(container.vertex3A.x + (i + 1) * subStep, container.vertex3A.y + (j + 1) * subStep, container.vertex3A.z + (k + 1) * subStep)
                 };
 
                 randomFuncs.push(randomConvexNonIntersected(minR, maxR, minVertices, maxVertices, sub, randomSphereInBox));
@@ -1604,24 +1609,24 @@ function initCylinderScene(options) {
     scene.position.set(0, 0, 0);
 
     // Bumpers
-    var CustomSinCurve = THREE.Curve.create(
-        function ( scale ) { //custom curve constructor
-            this.scale = (scale === undefined) ? 1 : scale;
-        },
-
-        function ( t ) { //getPoint: t is between 0-1
-            var tx = Math.cos(2 * Math.PI * t),
-                ty = 0,
-                tz = Math.sin(2 * Math.PI * t);
-
-            return new THREE.Vector3(tx, ty, tz).multiplyScalar(this.scale);
-        }
-    );
-
-    var path = new THREE.LineCurve3( new THREE.Vector3(path_dist, 0, path_dist), new THREE.Vector3(path_dist, height, path_dist) );
+    //var CustomSinCurve = THREE.Curve.create(
+    //    function ( scale ) { //custom curve constructor
+    //        this.scale = (scale === undefined) ? 1 : scale;
+    //    },
+    //
+    //    function ( t ) { //getPoint: t is between 0-1
+    //        var tx = Math.cos(2 * Math.PI * t),
+    //            ty = 0,
+    //            tz = Math.sin(2 * Math.PI * t);
+    //
+    //        return new THREE.Vector3(tx, ty, tz).multiplyScalar(this.scale);
+    //    }
+    //);
+    //
+    //var path = new THREE.LineCurve3( new THREE.Vector3(path_dist, 0, path_dist), new THREE.Vector3(path_dist, height, path_dist) );
 
     var bumper,
-        bumper_geom = new THREE.BoxGeometry(1, height, Math.PI * radius * radius / segments);
+        bumper_geom = new THREE.BoxGeometry(1, height, Math.PI * radius * radius / (segments*10));
 
 
     // Wall
@@ -1656,16 +1661,42 @@ function initCylinderScene(options) {
 }
 function randomGenAndPutInCylinder(options) {
 
-    var cylinder_geometry = new THREE.CylinderGeometry(75, 75, 150, 32);
-    var cylinder = new THREE.Mesh(cylinder_geometry);
+    //var radius = options.container.options.radius;
+    //var height = options.container.options.height + 2;
+    //var path_dist = 0;
+    //var thickness = 11;
+    //var segments = 36;
+    //
+    //var cylinder_geometry = new THREE.CylinderGeometry(75, 75, 150, 32);
+    //var cylinder = new THREE.Mesh(cylinder_geometry);
+    //var cylinderVolume = calcVolumeOfCylinder(cylinder_geometry);
+    //
+    //var box_len = 1.414 * cylinder_geometry.parameters.radiusTop;
+    //var box_origin = (1 - Math.sqrt(2)/2) * cylinder_geometry.parameters.radiusTop;
+    //var box_height = cylinder_geometry.parameters.height;
+    //var box = {
+    //    vertex3A: new THREE.Vector3(box_origin, 0, box_origin),
+    //    vertex3B: new THREE.Vector3(box_len, box_height, box_len),
+    //    randomFunc: function(){}
+    //};
+
+
+    var radius = options.container.options.radius;
+    var height = options.container.options.height + 2;
+    var path_dist = 0;
+    var thickness = 11;
+    var segments = 36;
+
+    var cylinder_geometry = new THREE.CylinderGeometry(radius, radius, height, segments);
+    //var cylinder = new THREE.Mesh(cylinder_geometry);
     var cylinderVolume = calcVolumeOfCylinder(cylinder_geometry);
 
-    var box_len = 1.414 * cylinder_geometry.parameters.radiusTop;
-    var box_origin = (1 - Math.sqrt(2)/2) * cylinder_geometry.parameters.radiusTop;
-    var box_height = cylinder_geometry.parameters.height;
+    var box_len = Math.sqrt(2) * radius;
+    var box_origin = (1 - Math.sqrt(2)/2) * radius;
+    var box_height = height;
     var box = {
         vertex3A: new THREE.Vector3(box_origin, 0, box_origin),
-        vertex3B: new THREE.Vector3(box_len, box_height, box_len),
+        vertex3B: new THREE.Vector3(box_origin + box_len, box_height, box_origin + box_len),
         randomFunc: function(){}
     };
 
@@ -1683,16 +1714,20 @@ function randomGenAndPutInCylinder(options) {
     var subStep = 30;
     var interectionCount = 0;
 
+    // Iter through sub boxes
+    var xitercount = Math.floor((container.vertex3B.x - container.vertex3A.x) / subStep),
+        yitercount = Math.floor((container.vertex3B.y - container.vertex3A.y) / subStep),
+        zitercount = Math.floor((container.vertex3B.z - container.vertex3A.z) / subStep);
 
-    for (var i = box.vertex3A.x; i < container.vertex3B.x; i+=subStep) {
+    for (var i = 0; i < xitercount; i++) {
 
-        for (var j = box.vertex3A.y; j < container.vertex3B.y; j+=subStep) {
+        for (var j = 0; j < yitercount; j++) {
 
-            for (var k = box.vertex3A.z; k < container.vertex3B.z; k+=subStep) {
+            for (var k = 0; k < zitercount; k++) {
 
                 var sub = {
-                    vertex3A: new THREE.Vector3(i, j, k),
-                    vertex3B: new THREE.Vector3(i + subStep, j + subStep, k + subStep)
+                    vertex3A: new THREE.Vector3(container.vertex3A.x + i * subStep, container.vertex3A.y + j * subStep, container.vertex3A.z + k * subStep),
+                    vertex3B: new THREE.Vector3(container.vertex3A.x + (i + 1) * subStep, container.vertex3A.y + (j + 1) * subStep, container.vertex3A.z + (k + 1) * subStep)
                 };
 
                 randomFuncs.push(randomConvexNonIntersected(minR, maxR, minVertices, maxVertices, sub, randomSphereInBox));
