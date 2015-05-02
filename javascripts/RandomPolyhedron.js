@@ -579,11 +579,11 @@ function randomGenAndPut() {
 
     // var randomSphere = randomSphereNonIntersected(minR, maxR, cylinder_geometry, randomSphereInCylinder);
     // var randomSphere = randomSphereNonIntersected(minR, maxR, box, randomSphereInBox);
-    var randomConvex = randomConvexNonIntersected(minR, maxR, minVertices, maxVertices, container, randomSphereInBox);
+    var randomConvex = randomConvexNonIntersected(minR, maxR, minVertices, maxVertices, container, randomSphereInBox, allConvex);
 
 
     // Generate polyhedrons forever
-    for (var i = 0; i < 10000; i++) {
+    for (var i = 0; i < 1000; i++) {
         // console.log("IterCount: " + (i + 1));
 
     // while(true) {
@@ -1064,9 +1064,9 @@ function randomGenAndPutInSubBox2() {
         curr.applyMatrix(matrix);
 
         // scale
-        var x = randomBetween(0.5, 0.8);
-        var y = randomBetween(0.5, 0.8);
-        var z = randomBetween(0.5, 0.8);
+        var x = randomBetween(0.6, 1);
+        var y = randomBetween(0.6, 1);
+        var z = randomBetween(0.6, 1);
 
         //y = x, z = x;
 
@@ -1233,11 +1233,94 @@ function randomGenAndPutInSubBox2() {
 }
 
 var allConvex = [];
-function randomGenAndPutInSubBox3() {
+
+function initBoxScene(options) {
+
+    var edge_len = options.container.options.edge_len;
+    var thickness = 11;
+
+
+    // Ground
+    ground = new Physijs.BoxMesh(
+        new THREE.BoxGeometry(edge_len + thickness*2, thickness, edge_len + thickness*2),
+        //new THREE.PlaneGeometry(50, 50),
+        ground_material,
+        0 // mass
+    );
+    ground.position.x = edge_len / 2;
+    ground.position.y = -Math.ceil(thickness/2);
+    ground.position.z = edge_len / 2;
+
+    box_volume = Math.pow(edge_len, 3);
+
+    ground.receiveShadow = true;
+    scene.add( ground );
+    scene.position.set(0, 0, 0);
+
+    // Bumpers
+    var bumper,
+        bumper_geom = new THREE.BoxGeometry(thickness, edge_len + thickness*2, edge_len + thickness*2);
+
+    // Back left
+    bumper = new Physijs.BoxMesh( bumper_geom, ground_material, 0, { restitution: .2 } );
+    bumper.position.y = edge_len/2;
+    bumper.position.x = -Math.ceil(thickness/2);
+    bumper.position.z = edge_len/2;
+    bumper.receiveShadow = true;
+    bumper.castShadow = true;
+    scene.add( bumper );
+
+    // Front right
+    bumper = new Physijs.BoxMesh( bumper_geom, wall_material, 0, { restitution: .2 } );
+    bumper.position.y = edge_len/2;
+    bumper.position.x = edge_len + Math.ceil(thickness/2);
+    bumper.position.z = edge_len/2;
+    bumper.receiveShadow = true;
+    bumper.castShadow = true;
+    scene.add( bumper );
+
+    // Back right
+    bumper = new Physijs.BoxMesh( bumper_geom, ground_material, 0, { restitution: .2 } );
+    bumper.position.y = edge_len/2;
+    bumper.position.x = edge_len/2;
+    bumper.position.z = -Math.ceil(thickness/2);
+    bumper.rotation.y = Math.PI / 2;
+    bumper.receiveShadow = true;
+    bumper.castShadow = true;
+    scene.add( bumper );
+
+    // Front left
+    bumper = new Physijs.BoxMesh( bumper_geom, wall_material, 0, { restitution: .2 } );
+    bumper.position.y = edge_len/2;
+    bumper.position.x = edge_len/2;
+    bumper.position.z = edge_len + Math.ceil(thickness/2);
+    bumper.rotation.y = Math.PI / 2;
+    bumper.receiveShadow = true;
+    bumper.castShadow = true;
+    scene.add( bumper );
+
+    // Top
+    bumper = new Physijs.BoxMesh( bumper_geom, wall_material, 0, { restitution: .2 } );
+    bumper.position.y = edge_len + Math.ceil(thickness/2);
+    bumper.position.x = edge_len/2;
+    bumper.position.z = edge_len/2;
+    bumper.rotation.z = Math.PI / 2;
+    bumper.receiveShadow = true;
+    bumper.castShadow = true;
+    scene.add( bumper );
+
+}
+function randomGenAndPutInSubBox3(options) {
+
+    var edge_len = options.container.options.edge_len;
+    var thickness = 11;
+    var minR = options.polyhedron.radius.min,
+        maxR = options.polyhedron.radius.max;
+    var minVertices = 4, maxVertices = 4;
 
     var box = {
         vertex3A: new THREE.Vector3(0, 0, 0),
-        vertex3B: new THREE.Vector3(150, 150, 150),
+        vertex3B: new THREE.Vector3(edge_len, edge_len, edge_len),
         objects: [],
         randomFunc: function(){}
     };
@@ -1248,8 +1331,6 @@ function randomGenAndPutInSubBox3() {
 
     //moveBox(box, 100, 100, 100);
 
-    var minR = 5, maxR = 10;
-    var minVertices = 4, maxVertices = 4;
 
     // Randomly generate outbound sphere for the convex polyhedron to be generated
     var subBoxes = [];
@@ -1271,7 +1352,7 @@ function randomGenAndPutInSubBox3() {
 
                 randomFuncs.push(randomConvexNonIntersected(minR, maxR, minVertices, maxVertices, sub, randomSphereInBox));
                 subBoxes.push(sub);
-                switch (THREE.Math.randInt(0, 2)) {
+                switch (THREE.Math.randInt(0, 3)) {
                     case 0:
                         allConvex.push.apply(allConvex, splitBoxTo5Tetrahedrons(sub));
                         break;
@@ -1280,6 +1361,8 @@ function randomGenAndPutInSubBox3() {
                         break;
                     case 2:
                         allConvex.push.apply(allConvex, splitBoxTo4Hexahedron(sub));
+                        break;
+                    case 3:
                         break;
 
                 }
@@ -1358,7 +1441,7 @@ function randomGenAndPutInSubBox3() {
         for (var j = 0; j < ITER_COUNT; j++) {
             // intersection happens
             var success = false;
-            switch (THREE.Math.randInt(1, 3)) {
+            switch (THREE.Math.randInt(1, 2)) {
                 case 1:
                     // try rotate the convex
                     var xa = randomBetween(-15, 15),
@@ -1378,29 +1461,28 @@ function randomGenAndPutInSubBox3() {
                         .makeTranslation(originX, originY, originZ);
                     curr.applyMatrix(matrix);
 
-                    if (hasIntersection(allConvex, curr, areIntersectedPolyhedrons)) {
-                        console.log("Intersection count : " + (++interectionCount));
-                        euler = new THREE.Euler(-xa, -xb, -xc, 'ZYX');
-
-                        matrix = new THREE.Matrix4()
-                            .makeTranslation(-originX, -originY, -originZ);
-                        curr.applyMatrix(matrix);
-
-                        matrix = new THREE.Matrix4()
-                            .makeRotationFromEuler(euler)
-                        curr.applyMatrix(matrix);
-
-                        matrix = new THREE.Matrix4()
-                            .makeTranslation(originX, originY, originZ);
-                        curr.applyMatrix(matrix);
-                        continue;
-                    } else {
-                        success = true;
-                    }
+                    //if (hasIntersection(allConvex, curr, areIntersectedPolyhedrons)) {
+                    //    console.log("Intersection count : " + (++interectionCount));
+                    //    euler = new THREE.Euler(-xa, -xb, -xc, 'ZYX');
+                    //
+                    //    matrix = new THREE.Matrix4()
+                    //        .makeTranslation(-originX, -originY, -originZ);
+                    //    curr.applyMatrix(matrix);
+                    //
+                    //    matrix = new THREE.Matrix4()
+                    //        .makeRotationFromEuler(euler)
+                    //    curr.applyMatrix(matrix);
+                    //
+                    //    matrix = new THREE.Matrix4()
+                    //        .makeTranslation(originX, originY, originZ);
+                    //    curr.applyMatrix(matrix);
+                    //    continue;
+                    //} else {
+                    //    success = true;
+                    //}
                     break;
 
                 case 2:
-                case 3:
                     // try transform
                     var xt = randomBetween(-15, 15),
                         yt = randomBetween(-15, 15),
@@ -1465,55 +1547,380 @@ function randomGenAndPutInSubBox3() {
             materials[0]
         );
 
-        //shape.addEventListener('collision', function(other_object, linear_velocity) {
-        //    var _vector = new THREE.Vector3;
-        //    _vector.set( 0, 0, 0 );
-        //    this.setAngularFactor( _vector );
-        //    this.setAngularVelocity( _vector );
-        //    this.setLinearFactor( _vector );
-        //    this.setLinearVelocity( _vector );
-        //});
+        shape.addEventListener('collision', function(other_object, linear_velocity) {
+            var _vector = new THREE.Vector3;
+            _vector.set( 0, 0, 0 );
+            this.setAngularFactor( _vector );
+            this.setAngularVelocity( _vector );
+            this.setLinearFactor( _vector );
+            this.setLinearVelocity( _vector );
+        });
         scene.add(shape);
     }
 
-    setTimeout(function() {
+    var interval = 4000;
+    var g = 60;
+    //setTimeout(function() {
+    //
+    //    scene.setGravity(new THREE.Vector3( 0, g, 0 ));
+    //    setTimeout(function() {
+    //        scene.setGravity(new THREE.Vector3( -g, 0, 0 ));
+    //        setTimeout(function() {
+    //            scene.setGravity(new THREE.Vector3(g, 0, 0));
+    //            setTimeout(function() {
+    //                scene.setGravity(new THREE.Vector3( 0, 0, -g ));
+    //                setTimeout(function() {
+    //                    scene.setGravity(new THREE.Vector3( 0, 0, g ));
+    //                }, interval);
+    //            }, interval);
+    //        }, interval);
+    //    }, interval);
+    //}, interval);
 
-        // Get current geometries
 
-        var result = "";
-        for (var i = 9; i < scene.children.length; i++) {
-            var curr = scene.children[i].geometry;
-            var curr_matrix = scene.children[i].matrix;
+}
 
-            curr.applyMatrix(curr_matrix);
+function initCylinderScene(options) {
 
-            var points = [];
-            for (var j = 0; j < curr.vertices.length; j++) {
-                points.push([curr.vertices[j].x, curr.vertices[j].y, curr.vertices[j].z]);
+    var radius = options.container.options.radius;
+    var height = options.container.options.height + 2;
+    var path_dist = 0;
+    var thickness = 11;
+    var segments = 36;
+
+    // Ground
+    ground = new Physijs.BoxMesh(
+        new THREE.BoxGeometry(radius * 2 + thickness, thickness, radius * 2 + thickness),
+        //new THREE.PlaneGeometry(50, 50),
+        ground_material,
+        0 // mass
+    );
+    ground.position.x = radius;
+    ground.position.y = 0;
+    ground.position.z = radius;
+
+    ground.receiveShadow = true;
+    scene.add( ground );
+    scene.position.set(0, 0, 0);
+
+    // Bumpers
+    var CustomSinCurve = THREE.Curve.create(
+        function ( scale ) { //custom curve constructor
+            this.scale = (scale === undefined) ? 1 : scale;
+        },
+
+        function ( t ) { //getPoint: t is between 0-1
+            var tx = Math.cos(2 * Math.PI * t),
+                ty = 0,
+                tz = Math.sin(2 * Math.PI * t);
+
+            return new THREE.Vector3(tx, ty, tz).multiplyScalar(this.scale);
+        }
+    );
+
+    var path = new THREE.LineCurve3( new THREE.Vector3(path_dist, 0, path_dist), new THREE.Vector3(path_dist, height, path_dist) );
+
+    var bumper,
+        bumper_geom = new THREE.BoxGeometry(1, height, Math.PI * radius * radius / segments);
+
+
+    // Wall
+    for (var i = 0; i < segments; i++) {
+        bumper = new Physijs.BoxMesh(
+            bumper_geom,
+            wall_material,
+            //ground_material,
+            0 // mass
+
+        );
+        var grad = 2 * i * Math.PI / segments;
+        bumper.position.x = radius + radius * Math.cos(grad);
+        bumper.position.y = radius;
+        bumper.position.z = radius + radius * Math.sin(grad);
+        bumper.rotation.y = -grad;
+        scene.add(bumper);
+    }
+
+    // Top
+
+    bumper_geom = new THREE.CylinderGeometry(radius, radius, thickness, segments);
+    bumper = new Physijs.CylinderMesh( bumper_geom, wall_material, 0, { restitution: .2 } );
+    bumper.position.y = height + 6;
+    bumper.position.x = radius;
+    bumper.position.z = radius;
+    //bumper.rotation.z = Math.PI / 2;
+    bumper.receiveShadow = true;
+    bumper.castShadow = true;
+    scene.add( bumper );
+
+}
+function randomGenAndPutInCylinder(options) {
+
+    var cylinder_geometry = new THREE.CylinderGeometry(75, 75, 150, 32);
+    var cylinder = new THREE.Mesh(cylinder_geometry);
+    var cylinderVolume = calcVolumeOfCylinder(cylinder_geometry);
+
+    var box_len = 1.414 * cylinder_geometry.parameters.radiusTop;
+    var box_origin = (1 - Math.sqrt(2)/2) * cylinder_geometry.parameters.radiusTop;
+    var box_height = cylinder_geometry.parameters.height;
+    var box = {
+        vertex3A: new THREE.Vector3(box_origin, 0, box_origin),
+        vertex3B: new THREE.Vector3(box_len, box_height, box_len),
+        randomFunc: function(){}
+    };
+
+    var boxVolume = calcVolumeOfBox(box);
+
+    var container = box;
+    var containerVolume = cylinderVolume;
+
+
+    var minR = 5, maxR = 10;
+    var minVertices = 4, maxVertices = 4;
+
+    var subBoxes = [];
+    var randomFuncs = [];
+    var subStep = 30;
+    var interectionCount = 0;
+
+
+    for (var i = box.vertex3A.x; i < container.vertex3B.x; i+=subStep) {
+
+        for (var j = box.vertex3A.y; j < container.vertex3B.y; j+=subStep) {
+
+            for (var k = box.vertex3A.z; k < container.vertex3B.z; k+=subStep) {
+
+                var sub = {
+                    vertex3A: new THREE.Vector3(i, j, k),
+                    vertex3B: new THREE.Vector3(i + subStep, j + subStep, k + subStep)
+                };
+
+                randomFuncs.push(randomConvexNonIntersected(minR, maxR, minVertices, maxVertices, sub, randomSphereInBox));
+                subBoxes.push(sub);
+                switch (THREE.Math.randInt(0, 0)) {
+                    case 0:
+                        allConvex.push.apply(allConvex, splitBoxTo5Tetrahedrons(sub));
+                        break;
+                    case 1:
+                        allConvex.push.apply(allConvex, splitBoxTo12Tetrahedrons(sub));
+                        break;
+                    case 2:
+                        allConvex.push.apply(allConvex, splitBoxTo4Hexahedron(sub));
+                        break;
+                    case 3:
+                        break;
+
+                }
+            }
+        }
+    }
+
+    // Randomize all convexs
+    for (var i = 0; i < allConvex.length; i++) {
+
+        var curr = allConvex[i];
+
+        // Compute sphere
+        curr.computeBoundingSphere();
+        var sphere = curr.boundingSphere;
+        var originX = sphere.center.x,
+            originY = sphere.center.y,
+            originZ = sphere.center.z;
+
+        //move to origin
+        var matrix = new THREE.Matrix4()
+            .makeTranslation(-originX, -originY, -originZ);
+        //curr.applyMatrix(matrix);
+
+        // scale
+        var x = randomBetween(0.7, 0.9);
+        var y = randomBetween(0.7, 0.9);
+        var z = randomBetween(0.7, 0.9);
+
+        //y = x, z = x;
+
+        matrix = new THREE.Matrix4()
+            .makeScale(x, y, z);
+        //curr.applyMatrix(matrix);
+
+        // move back
+        matrix = new THREE.Matrix4()
+            .makeTranslation(originX, originY, originZ);
+        //curr.applyMatrix(matrix);
+
+
+        curr.edges = extractEdges(curr.faces, 3);
+        curr.computeBoundingSphere();
+        //if (hasIntersection(allConvex, curr, areIntersectedPolyhedrons)) {
+        //    console.log("Intersection count : " + (++interectionCount));
+        //
+        //    // move to origin
+        //    var matrix = new THREE.Matrix4()
+        //        .makeTranslation(-originX, -originY, -originZ);
+        //    curr.applyMatrix(matrix);
+        //
+        //    matrix = new THREE.Matrix4()
+        //        .makeScale(1/x, 1/y, 1/z);
+        //    curr.applyMatrix(matrix);
+        //
+        //    // move back
+        //    matrix = new THREE.Matrix4()
+        //        .makeTranslation(originX, originY, originZ);
+        //    curr.applyMatrix(matrix);
+        //}
+
+    }
+
+    var ITER_COUNT = 100;
+
+    for (var i = 0; i < allConvex.length; i++) {
+
+        //var curr = allConvex[i].clone();
+        var curr = allConvex[i];
+        curr.edges = allConvex[i].edges;
+
+        var sphere = allConvex[i].boundingSphere;
+        var originX = sphere.center.x,
+            originY = sphere.center.y,
+            originZ = sphere.center.z;
+        for (var j = 0; j < ITER_COUNT; j++) {
+            // intersection happens
+            var success = false;
+            switch (THREE.Math.randInt(0, 0)) {
+                case 1:
+                    // try rotate the convex
+                    var xa = randomBetween(-15, 15),
+                        xb = randomBetween(-15, 15),
+                        xc = randomBetween(-15, 15),
+                        euler = new THREE.Euler(xa, xb, xc, 'XYZ'),
+
+                        matrix = new THREE.Matrix4()
+                            .makeTranslation(-originX, -originY, -originZ);
+                    curr.applyMatrix(matrix);
+
+                    matrix = new THREE.Matrix4()
+                        .makeRotationFromEuler(euler)
+                    curr.applyMatrix(matrix);
+
+                    matrix = new THREE.Matrix4()
+                        .makeTranslation(originX, originY, originZ);
+                    curr.applyMatrix(matrix);
+
+                    //if (hasIntersection(allConvex, curr, areIntersectedPolyhedrons)) {
+                    //    console.log("Intersection count : " + (++interectionCount));
+                    //    euler = new THREE.Euler(-xa, -xb, -xc, 'ZYX');
+                    //
+                    //    matrix = new THREE.Matrix4()
+                    //        .makeTranslation(-originX, -originY, -originZ);
+                    //    curr.applyMatrix(matrix);
+                    //
+                    //    matrix = new THREE.Matrix4()
+                    //        .makeRotationFromEuler(euler)
+                    //    curr.applyMatrix(matrix);
+                    //
+                    //    matrix = new THREE.Matrix4()
+                    //        .makeTranslation(originX, originY, originZ);
+                    //    curr.applyMatrix(matrix);
+                    //    continue;
+                    //} else {
+                    //    success = true;
+                    //}
+                    break;
+
+                case 2:
+                    // try transform
+                    var xt = randomBetween(-15, 15),
+                        yt = randomBetween(-15, 15),
+                        zt = randomBetween(-15, 15),
+
+
+                        matrix = new THREE.Matrix4().makeTranslation(xt, yt, zt);
+                    curr.applyMatrix(matrix);
+                    var out = isPolyhedronOutOfBox(container, curr);
+                    var inter = hasIntersection(allConvex, curr, areIntersectedPolyhedrons);
+                    if (!out && !inter) {
+
+                        success = true;
+                    } else {
+                        console.log("Intersection count : " + (++interectionCount));
+                        success = false;
+                        matrix = new THREE.Matrix4().makeTranslation(-xt, -yt, -zt);
+                        curr.applyMatrix(matrix);
+                    }
+                    break;
+
+
+                default:
+                    break;
             }
 
-            var faces = [];
-            for (var j = 0; j < curr.faces.length; j++) {
-                faces.push([curr.faces[j].a, curr.faces[j].b, curr.faces[j].c]);
-            }
-
-            result +=
-                "polyhedron("
-                + "points="
-                    + JSON.stringify(points)
-                + ","
-                + "faces="
-                    + JSON.stringify(faces)
-                + ""
-                + ");\n";
-
+            if (success) break;
         }
 
-        console.log(result);
 
-        var blob = new Blob([result], {type: 'text/plain'});
-        saveAs(blob, "result.me");
+    }
 
-    }, 10000);
+    // Output
+    for (var i = 0; i < allConvex.length; i++) {
+
+        var materials = [
+            new THREE.MeshLambertMaterial({ambient: Math.random() * 16777215}),
+            new THREE.MeshBasicMaterial({
+                color: Math.random() * 16777215,
+                wireframe: true,
+                transparent: true,
+                opacity: 1
+            })
+        ];
+
+
+        var convex = allConvex[i];
+        if (convex == undefined) continue;
+        var volume = calculate(convex);
+        //if (volume < 20) continue;
+        totalVolume += volume;
+        rate = (totalVolume / containerVolume) * 100
+        // console.log("Vertices: " + JSON.stringify(convex.vertices));
+        // console.log("Current: " + volume);
+        // console.log("Total: " + totalVolume);
+        // console.log("containerVolume: " + containerVolume);
+        console.log("Rate: " + rate);
+        console.log("Intersection count : " +interectionCount);
+        //var object = THREE.SceneUtils.createMultiMaterialObject(convex, materials);
+        var shape = new Physijs.ConvexMesh(
+            allConvex[i],
+            materials[0]
+        );
+
+        shape.addEventListener('collision', function(other_object, linear_velocity) {
+            var _vector = new THREE.Vector3;
+            _vector.set( 0, 0, 0 );
+            this.setAngularFactor( _vector );
+            this.setAngularVelocity( _vector );
+            this.setLinearFactor( _vector );
+            this.setLinearVelocity( _vector );
+        });
+        scene.add(shape);
+    }
+
+    var interval = 4000;
+    var g = 60;
+    //setTimeout(function() {
+    //
+    //    scene.setGravity(new THREE.Vector3( 0, g, 0 ));
+    //    setTimeout(function() {
+    //        scene.setGravity(new THREE.Vector3( -g, 0, 0 ));
+    //        setTimeout(function() {
+    //            scene.setGravity(new THREE.Vector3(g, 0, 0));
+    //            setTimeout(function() {
+    //                scene.setGravity(new THREE.Vector3( 0, 0, -g ));
+    //                setTimeout(function() {
+    //                    scene.setGravity(new THREE.Vector3( 0, 0, g ));
+    //                }, interval);
+    //            }, interval);
+    //        }, interval);
+    //    }, interval);
+    //}, interval);
+
 
 }

@@ -2,12 +2,9 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="f3f9cd92-c03e-4b84-91f8-ab352d5eabe9" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.gitignore" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/javascripts/FileSaver.min.js" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/javascripts/utils.js" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/cfg.json" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/javascripts/utils.js" afterPath="$PROJECT_DIR$/javascripts/fileutils.js" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/javascripts/RandomPolyhedron.js" afterPath="$PROJECT_DIR$/javascripts/RandomPolyhedron.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/javascripts/indexController.js" afterPath="$PROJECT_DIR$/javascripts/indexController.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/main.js" afterPath="$PROJECT_DIR$/main.js" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/shapes.html" afterPath="$PROJECT_DIR$/shapes.html" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
     </list>
@@ -36,8 +33,8 @@
       <file leaf-file-name="RandomPolyhedron.js" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/javascripts/RandomPolyhedron.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.4117647" vertical-offset="20352" max-vertical-offset="22875">
-              <caret line="1382" column="45" selection-start-line="1382" selection-start-column="45" selection-end-line="1382" selection-end-column="45" />
+            <state vertical-scroll-proportion="0.25778732" vertical-offset="24600" max-vertical-offset="28980">
+              <caret line="1656" column="4" selection-start-line="0" selection-start-column="0" selection-end-line="1926" selection-end-column="0" />
               <folding>
                 <element signature="n#!!doc" expanded="true" />
               </folding>
@@ -45,11 +42,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="utils.js" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/javascripts/utils.js">
+      <file leaf-file-name="fileutils.js" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/javascripts/fileutils.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="990">
-              <caret line="21" column="40" selection-start-line="21" selection-start-column="40" selection-end-line="21" selection-end-column="40" />
+            <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="1245">
+              <caret line="36" column="27" selection-start-line="36" selection-start-column="27" selection-end-line="36" selection-end-column="27" />
               <folding />
             </state>
           </provider>
@@ -70,8 +67,18 @@
       <file leaf-file-name="shapes.html" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/shapes.html">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="-7.5" vertical-offset="5730" max-vertical-offset="6750">
-              <caret line="394" column="0" selection-start-line="394" selection-start-column="0" selection-end-line="394" selection-end-column="0" />
+            <state vertical-scroll-proportion="-91.541664" vertical-offset="3863" max-vertical-offset="6630">
+              <caret line="404" column="15" selection-start-line="404" selection-start-column="15" selection-end-line="404" selection-end-column="15" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="cfg.json" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/cfg.json">
+          <provider selected="true" editor-type-id="text-editor">
+            <state vertical-scroll-proportion="-14.375" vertical-offset="0" max-vertical-offset="480">
+              <caret line="23" column="3" selection-start-line="23" selection-start-column="3" selection-end-line="23" selection-end-column="3" />
               <folding />
             </state>
           </provider>
@@ -100,8 +107,8 @@
       <file leaf-file-name="indexController.js" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/javascripts/indexController.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0" vertical-offset="675" max-vertical-offset="2595">
-              <caret line="68" column="37" selection-start-line="68" selection-start-column="37" selection-end-line="68" selection-end-column="37" />
+            <state vertical-scroll-proportion="0.0" vertical-offset="915" max-vertical-offset="2595">
+              <caret line="76" column="64" selection-start-line="76" selection-start-column="64" selection-end-line="76" selection-end-column="64" />
               <folding />
             </state>
           </provider>
@@ -129,6 +136,8 @@
         <option value="$PROJECT_DIR$/main.js" />
         <option value="$PROJECT_DIR$/javascripts/utils.js" />
         <option value="$PROJECT_DIR$/javascripts/FileSaver.min.js" />
+        <option value="$PROJECT_DIR$/javascripts/fileutils.js" />
+        <option value="$PROJECT_DIR$/cfg.json" />
         <option value="$PROJECT_DIR$/shapes.html" />
         <option value="$PROJECT_DIR$/javascripts/RandomPolyhedron.js" />
       </list>
@@ -138,10 +147,9 @@
     <detection-done>true</detection-done>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="-477" />
-    <option name="y" value="27" />
-    <option name="width" value="1788" />
-    <option name="height" value="1062" />
+    <option name="y" value="22" />
+    <option name="width" value="1920" />
+    <option name="height" value="1075" />
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="false">
     <OptionsSetting value="true" id="Add" />
@@ -253,7 +261,7 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="-477" y="27" width="1788" height="1062" extended-state="6" />
+    <frame x="0" y="22" width="1920" height="1075" extended-state="6" />
     <editor active="true" />
     <layout>
       <window_info id="Changes" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
@@ -261,7 +269,7 @@
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Application Servers" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.26825127" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.24960506" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
@@ -305,14 +313,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/javascripts/ConvexGeometry.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="46.153847" vertical-offset="2055" max-vertical-offset="3390">
-          <caret line="57" column="58" selection-start-line="57" selection-start-column="58" selection-end-line="57" selection-end-column="58" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/javascripts/main.js">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="918">
@@ -340,10 +340,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/javascripts/utils.js">
+    <entry file="file://$PROJECT_DIR$/javascripts/indexController.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="990">
-          <caret line="21" column="40" selection-start-line="21" selection-start-column="40" selection-end-line="21" selection-end-column="40" />
+        <state vertical-scroll-proportion="0.0" vertical-offset="915" max-vertical-offset="2595">
+          <caret line="76" column="64" selection-start-line="76" selection-start-column="64" selection-end-line="76" selection-end-column="64" />
           <folding />
         </state>
       </provider>
@@ -358,26 +358,42 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/shapes.html">
+    <entry file="file://$PROJECT_DIR$/javascripts/ConvexGeometry.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="-7.5" vertical-offset="5730" max-vertical-offset="6750">
-          <caret line="394" column="0" selection-start-line="394" selection-start-column="0" selection-end-line="394" selection-end-column="0" />
+        <state vertical-scroll-proportion="46.153847" vertical-offset="2055" max-vertical-offset="3390">
+          <caret line="57" column="58" selection-start-line="57" selection-start-column="58" selection-end-line="57" selection-end-column="58" />
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/javascripts/indexController.js">
+    <entry file="file://$PROJECT_DIR$/javascripts/fileutils.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="675" max-vertical-offset="2595">
-          <caret line="68" column="37" selection-start-line="68" selection-start-column="37" selection-end-line="68" selection-end-column="37" />
+        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="1245">
+          <caret line="36" column="27" selection-start-line="36" selection-start-column="27" selection-end-line="36" selection-end-column="27" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/cfg.json">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="-14.375" vertical-offset="0" max-vertical-offset="480">
+          <caret line="23" column="3" selection-start-line="23" selection-start-column="3" selection-end-line="23" selection-end-column="3" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/shapes.html">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="-91.541664" vertical-offset="3863" max-vertical-offset="6630">
+          <caret line="404" column="15" selection-start-line="404" selection-start-column="15" selection-end-line="404" selection-end-column="15" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/javascripts/RandomPolyhedron.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.4117647" vertical-offset="20352" max-vertical-offset="22875">
-          <caret line="1382" column="45" selection-start-line="1382" selection-start-column="45" selection-end-line="1382" selection-end-column="45" />
+        <state vertical-scroll-proportion="0.25778732" vertical-offset="24600" max-vertical-offset="28980">
+          <caret line="1656" column="4" selection-start-line="0" selection-start-column="0" selection-end-line="1926" selection-end-column="0" />
           <folding>
             <element signature="n#!!doc" expanded="true" />
           </folding>

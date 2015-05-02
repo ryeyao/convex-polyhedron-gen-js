@@ -18,7 +18,7 @@
 	<script type="text/javascript" src="javascripts/Polygon.js"></script>
 	<script type="text/javascript" src="javascripts/Vector.js"></script>
 	<script type="text/javascript" src="javascripts/Point.js"></script>
-	<script type="text/javascript" src="javascripts/utils.js"></script>
+	<script type="text/javascript" src="javascripts/fileutils.js"></script>
 	<script type="text/javascript" src="javascripts/FileSaver.min.js"></script>
 
 	
@@ -58,7 +58,7 @@
 		document.getElementById( 'viewport' ).appendChild( physics_stats.domElement );
 		
 		scene = new Physijs.Scene({ fixedTimeStep: 1 / 120 });
-		scene.setGravity(new THREE.Vector3( 0, -10, 0 ));
+		scene.setGravity(new THREE.Vector3( 0, -30, 0 ));
 		scene.addEventListener(
 			'update',
 			function() {
@@ -74,9 +74,13 @@
 			1000
 		);
 		// camera.position.set( 60, 50, 60 );
-		camera.position.set( 450, 350, 350 );
+//		camera.position.set( 450, 350, 450 );
+		camera.position.set( 450, 150, 450 );
+//		camera.position.set( 0, 350, 0 );
+//		camera.position.set( 450, 0, 450 );
 
 		camera.lookAt( scene.position );
+//		camera.lookAt( );
 		scene.add( camera );
 
 		// Axis
@@ -113,81 +117,30 @@
 		ground_material.map.wrapS = ground_material.map.wrapT = THREE.RepeatWrapping;
 		ground_material.map.repeat.set( 2.5, 2.5 );
 		
-		// Ground
-		ground = new Physijs.BoxMesh(
-			new THREE.BoxGeometry(150, 1, 150),
-			//new THREE.PlaneGeometry(50, 50),
-			ground_material,
-			0 // mass
-		);
-		ground.position.x = 75;
-		ground.position.y = -1;
-		ground.position.z = 75;
-
-		box_volume = 150 * 150 * 150;
-
-		ground.receiveShadow = true;
-		scene.add( ground );
-		scene.position.set(0, 0, 0);
-
-		// Bumpers
-		var bumper,
-			bumper_geom = new THREE.BoxGeometry(1, 150, 150);
-		
-		// Back left
-		bumper = new Physijs.BoxMesh( bumper_geom, ground_material, 0, { restitution: .2 } );
-		bumper.position.y = 75;
-		bumper.position.x = -1;
-		bumper.position.z = 75;
-		bumper.receiveShadow = true;
-		bumper.castShadow = true;
-		scene.add( bumper );
-		
-		// Front right
-		bumper = new Physijs.BoxMesh( bumper_geom, wall_material, 0, { restitution: .2 } );
-		bumper.position.y = 75;
-		bumper.position.x = 151;
-		bumper.position.z = 75;
-		bumper.receiveShadow = true;
-		bumper.castShadow = true;
-		scene.add( bumper );
-		
-		// Back right
-		bumper = new Physijs.BoxMesh( bumper_geom, wall_material, 0, { restitution: .2 } );
-		bumper.position.y = 75;
-		bumper.position.x = 75;
-		bumper.position.z = -1;
-		bumper.rotation.y = Math.PI / 2;
-		bumper.receiveShadow = true;
-		bumper.castShadow = true;
-		scene.add( bumper );
-		
-		// Front left
-		bumper = new Physijs.BoxMesh( bumper_geom, wall_material, 0, { restitution: .2 } );
-		bumper.position.y = 75;
-		bumper.position.x = 75;
-		bumper.position.z = 151;
-		bumper.rotation.y = Math.PI / 2;
-		bumper.receiveShadow = true;
-		bumper.castShadow = true;
-		scene.add( bumper );
-
-		// Top
-		bumper = new Physijs.BoxMesh( bumper_geom, wall_material, 0, { restitution: .2 } );
-		bumper.position.y = 151;
-		bumper.position.x = 75;
-		bumper.position.z = 75;
-		bumper.rotation.z = Math.PI / 2;
-		bumper.receiveShadow = true;
-		bumper.castShadow = true;
-		scene.add( bumper );
-		
-		requestAnimationFrame( render );
-		scene.simulate();
 
 //		createShape();
 
-		var allConvexs = randomGenAndPutInSubBox3();
+//		randomGenAndPutInSubBox3();
+
+		readFile("cfg.json", function (options) {
+
+			console.log(JSON.stringify(options));
+			options = JSON.parse(options);
+			if (options.container.type == "cylinder") {
+				initCylinderScene(options);
+				requestAnimationFrame( render );
+				scene.simulate();
+				randomGenAndPutInCylinder(options);
+			} else {
+				initBoxScene(options);
+				requestAnimationFrame( render );
+				scene.simulate();
+				randomGenAndPutInSubBox3(options);
+			}
+
+		});
+
+//		randomGenAndPut();
 //		function dosomething() {
 //			var allConvexs = randomGenAndPutInSubBox2();
 ////		var allConvexs = randomGenAndPutInSubBox();
@@ -216,6 +169,45 @@
 //				document.getElementById('shapecount').textContent = i + ' shapes created';
 //			}
 //		}
+		setTimeout(function() {
+
+			// Get current geometries
+
+			var result = "";
+			for (var i = 9; i < scene.children.length; i++) {
+				var curr = scene.children[i].geometry;
+				var curr_matrix = scene.children[i].matrix;
+
+				curr.applyMatrix(curr_matrix);
+
+				var points = [];
+				for (var j = 0; j < curr.vertices.length; j++) {
+					points.push([curr.vertices[j].x, curr.vertices[j].y, curr.vertices[j].z]);
+				}
+
+				var faces = [];
+				for (var j = 0; j < curr.faces.length; j++) {
+					faces.push([curr.faces[j].a, curr.faces[j].b, curr.faces[j].c]);
+				}
+
+				result +=
+						"polyhedron("
+						+ "points="
+						+ JSON.stringify(points)
+						+ ","
+						+ "faces="
+						+ JSON.stringify(faces)
+						+ ""
+						+ ");\n";
+
+			}
+
+//			console.log(result);
+
+			var blob = new Blob([result], {type: 'text/plain'});
+			saveAs(blob, "result.me");
+
+		}, 30000);
 
 	};
 	
@@ -433,11 +425,11 @@
 
 <body>
 	<div id="heading">
-		<h1>Shapes in Physijs</h1>
-		<p>
-			All of the supported shapes in Physijs -
-			<span id="shapecount"></span> <button id="stop">Stop adding shapes</button><br />
-		</p>
+		<!--<h1>Shapes in Physijs</h1>-->
+		<!--<p>-->
+			<!--All of the supported shapes in Physijs --->
+			<!--<span id="shapecount"></span> <button id="stop">Stop adding shapes</button><br />-->
+		<!--</p>-->
 	</div>
 	<div id="viewport"></div>
 </body>
