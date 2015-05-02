@@ -32,6 +32,23 @@ function writeToFile(path, content) {
 
 }
 
+function downloadFile(content) {
+    var data = new Blob([content], {type: 'text/plain'});
+
+    // If we are replacing a previously generated file we need to
+    // manually revoke the object URL to avoid memory leaks.
+    var textFile = null;
+    if (textFile !== null) {
+        window.URL.revokeObjectURL(textFile);
+    }
+
+    textFile = window.URL.createObjectURL(data);
+
+    //window.location.href = textFile;
+    //window.open("data:text/plain;charset=utf-8," + content);
+    window.open(textFile);
+}
+
 function readFile(path, callback) {
     var rawFile = new XMLHttpRequest();
     rawFile.open("GET", path, false);
@@ -47,6 +64,29 @@ function readFile(path, callback) {
         }
     }
     rawFile.send(null);
+
+}
+
+function save_content_to_file(content, filename)
+{
+    var dlg = false;
+    with(document){
+        ir=createElement('iframe');
+        ir.id='ifr';
+        ir.location='about.blank';
+        ir.style.display='none';
+        body.appendChild(ir);
+        with(getElementById('ifr').contentWindow.document){
+            open("text/plain", "replace");
+            charset = "utf-8";
+            write(content);
+            close();
+            document.charset = "utf-8";
+            dlg = execCommand('SaveAs', false, filename+'.txt');
+        }
+        body.removeChild(ir);
+    }
+    return dlg;
 }
 
 function errorHandler(e) {

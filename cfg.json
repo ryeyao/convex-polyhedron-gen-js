@@ -1,6 +1,6 @@
 {
   "container": {
-    "type": "cube",
+    "type": "box",
     "options": {
       "height": 150,
       "radius": 75,

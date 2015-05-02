@@ -52,8 +52,25 @@ function isPointOutOfBox(box, point) {
 }
 
 function isPointOutOfCylinder(cylinder, point) {
-    var radius = cylinder.radiusTop;
-    cylinder.radiusTop
+    var radius = cylinder.parameters.radiusTop;
+    if (point.distanceTo(new THREE.Vector3(radius, point.y, radius)) > radius) {
+        return true;
+    }
+    return false;
+}
+
+function areOneOfPointsOutOfCylinder(cylinder, points) {
+    for (var i = 0; i < points.length; i++) {
+        if (isPointOutOfCylinder(cylinder, points[i])) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+function isPolyhedronOutOfCylinder(cylinder, polyhedron) {
+    return areOneOfPointsOutOfCylinder(cylinder, polyhedron.vertices);
 }
 
 function areOneOfPointsOutOfBox(box, points) {
@@ -782,7 +799,7 @@ function randomGenAndPutInSubBox() {
     // return box;
 }
 
-function splitBoxTo12Tetrahedrons(box) {
+function splitBoxTo28Tetrahedrons(box) {
 
     var tetrahedrons = [];
     var len = box.vertex3B.x - box.vertex3A.x;
@@ -870,6 +887,110 @@ function splitBoxTo12Tetrahedrons(box) {
     vertices12.push(new THREE.Vector3(box.vertex3A.x, box.vertex3A.y + len/2, box.vertex3A.z + len/2));
     vertices12.push(new THREE.Vector3(box.vertex3A.x + len/2, box.vertex3A.y + len/2, box.vertex3A.z + len));
 
+
+
+
+
+
+    var vertices13 = [];
+    vertices13.push(new THREE.Vector3(box.vertex3A.x, box.vertex3A.y + len, box.vertex3A.z));
+    vertices13.push(new THREE.Vector3(box.vertex3A.x + len/2, box.vertex3A.y + len, box.vertex3A.z + len/2));
+    vertices13.push(new THREE.Vector3(box.vertex3A.x + len/2, box.vertex3A.y + len/2, box.vertex3A.z));
+    vertices13.push(new THREE.Vector3(box.vertex3A.x, box.vertex3A.y + len/2, box.vertex3A.z + len/2));
+
+    var vertices14 = [];
+    vertices14.push(new THREE.Vector3(box.vertex3A.x + len, box.vertex3A.y + len, box.vertex3A.z));
+    vertices14.push(new THREE.Vector3(box.vertex3A.x + len/2, box.vertex3A.y + len, box.vertex3A.z + len/2));
+    vertices14.push(new THREE.Vector3(box.vertex3A.x + len/2, box.vertex3A.y + len/2, box.vertex3A.z + len));
+    vertices14.push(new THREE.Vector3(box.vertex3A.x + len, box.vertex3A.y + len/2, box.vertex3A.z + len/2));
+
+    var vertices15 = [];
+    vertices15.push(new THREE.Vector3(box.vertex3A.x + len, box.vertex3A.y + len, box.vertex3A.z + len));
+    vertices15.push(new THREE.Vector3(box.vertex3A.x + len/2, box.vertex3A.y + len, box.vertex3A.z + len/2));
+    vertices15.push(new THREE.Vector3(box.vertex3A.x + len, box.vertex3A.y + len/2, box.vertex3A.z + len/2));
+    vertices15.push(new THREE.Vector3(box.vertex3A.x + len/2, box.vertex3A.y + len/2, box.vertex3A.z + len));
+
+    var vertices16 = [];
+    vertices16.push(new THREE.Vector3(box.vertex3A.x, box.vertex3A.y + len, box.vertex3A.z + len));
+    vertices16.push(new THREE.Vector3(box.vertex3A.x + len/2, box.vertex3A.y + len, box.vertex3A.z + len/2));
+    vertices16.push(new THREE.Vector3(box.vertex3A.x, box.vertex3A.y + len/2, box.vertex3A.z + len/2));
+    vertices16.push(new THREE.Vector3(box.vertex3A.x + len/2, box.vertex3A.y + len/2, box.vertex3A.z + len));
+
+    var vertices17 = [];
+    vertices17.push(new THREE.Vector3(box.vertex3A.x, box.vertex3A.y, box.vertex3A.z));
+    vertices17.push(new THREE.Vector3(box.vertex3A.x + len/2, box.vertex3A.y, box.vertex3A.z + len/2));
+    vertices17.push(new THREE.Vector3(box.vertex3A.x, box.vertex3A.y + len/2, box.vertex3A.z + len/2));
+    vertices17.push(new THREE.Vector3(box.vertex3A.x + len/2, box.vertex3A.y + len/2, box.vertex3A.z));
+
+    var vertices18 = [];
+    vertices18.push(new THREE.Vector3(box.vertex3A.x + len, box.vertex3A.y, box.vertex3A.z));
+    vertices18.push(new THREE.Vector3(box.vertex3A.x + len/2, box.vertex3A.y, box.vertex3A.z + len/2));
+    vertices18.push(new THREE.Vector3(box.vertex3A.x + len/2, box.vertex3A.y + len/2, box.vertex3A.z));
+    vertices18.push(new THREE.Vector3(box.vertex3A.x + len, box.vertex3A.y + len/2, box.vertex3A.z + len/2));
+
+    var vertices19 = [];
+    vertices19.push(new THREE.Vector3(box.vertex3A.x + len, box.vertex3A.y, box.vertex3A.z + len));
+    vertices19.push(new THREE.Vector3(box.vertex3A.x + len/2, box.vertex3A.y, box.vertex3A.z + len/2));
+    vertices19.push(new THREE.Vector3(box.vertex3A.x + len, box.vertex3A.y + len/2, box.vertex3A.z + len/2));
+    vertices19.push(new THREE.Vector3(box.vertex3A.x + len/2, box.vertex3A.y + len/2, box.vertex3A.z + len));
+
+    var vertices20 = [];
+    vertices20.push(new THREE.Vector3(box.vertex3A.x, box.vertex3A.y, box.vertex3A.z + len));
+    vertices20.push(new THREE.Vector3(box.vertex3A.x + len/2, box.vertex3A.y, box.vertex3A.z + len/2));
+    vertices20.push(new THREE.Vector3(box.vertex3A.x, box.vertex3A.y + len/2, box.vertex3A.z + len/2));
+    vertices20.push(new THREE.Vector3(box.vertex3A.x + len/2, box.vertex3A.y + len/2, box.vertex3A.z + len));
+
+
+
+
+    var vertices21 = [];
+    vertices21.push(new THREE.Vector3(box.vertex3A.x + len/2, box.vertex3A.y + len/2, box.vertex3A.z + len/2));
+    vertices21.push(new THREE.Vector3(box.vertex3A.x, box.vertex3A.y + len/2, box.vertex3A.z + len/2));
+    vertices21.push(new THREE.Vector3(box.vertex3A.x + len/2, box.vertex3A.y + len/2, box.vertex3A.z));
+    vertices21.push(new THREE.Vector3(box.vertex3A.x + len/2, box.vertex3A.y + len, box.vertex3A.z + len/2));
+
+    var vertices22 = [];
+    vertices22.push(new THREE.Vector3(box.vertex3A.x + len/2, box.vertex3A.y + len/2, box.vertex3A.z + len/2));
+    vertices22.push(new THREE.Vector3(box.vertex3A.x + len/2, box.vertex3A.y + len/2, box.vertex3A.z));
+    vertices22.push(new THREE.Vector3(box.vertex3A.x + len, box.vertex3A.y + len/2, box.vertex3A.z + len/2));
+    vertices22.push(new THREE.Vector3(box.vertex3A.x + len/2, box.vertex3A.y + len, box.vertex3A.z + len/2));
+
+    var vertices23 = [];
+    vertices23.push(new THREE.Vector3(box.vertex3A.x + len/2, box.vertex3A.y + len/2, box.vertex3A.z + len/2));
+    vertices23.push(new THREE.Vector3(box.vertex3A.x + len, box.vertex3A.y + len/2, box.vertex3A.z + len/2));
+    vertices23.push(new THREE.Vector3(box.vertex3A.x + len/2, box.vertex3A.y + len/2, box.vertex3A.z + len));
+    vertices23.push(new THREE.Vector3(box.vertex3A.x + len/2, box.vertex3A.y + len, box.vertex3A.z + len/2));
+
+    var vertices24 = [];
+    vertices24.push(new THREE.Vector3(box.vertex3A.x + len/2, box.vertex3A.y + len/2, box.vertex3A.z + len/2));
+    vertices24.push(new THREE.Vector3(box.vertex3A.x + len/2, box.vertex3A.y + len/2, box.vertex3A.z + len));
+    vertices24.push(new THREE.Vector3(box.vertex3A.x, box.vertex3A.y + len/2, box.vertex3A.z + len/2));
+    vertices24.push(new THREE.Vector3(box.vertex3A.x + len/2, box.vertex3A.y + len, box.vertex3A.z + len/2));
+
+    var vertices25 = [];
+    vertices25.push(new THREE.Vector3(box.vertex3A.x + len/2, box.vertex3A.y + len/2, box.vertex3A.z + len/2));
+    vertices25.push(new THREE.Vector3(box.vertex3A.x, box.vertex3A.y + len/2, box.vertex3A.z + len/2));
+    vertices25.push(new THREE.Vector3(box.vertex3A.x + len/2, box.vertex3A.y + len/2, box.vertex3A.z));
+    vertices25.push(new THREE.Vector3(box.vertex3A.x + len/2, box.vertex3A.y, box.vertex3A.z + len/2));
+
+    var vertices26 = [];
+    vertices26.push(new THREE.Vector3(box.vertex3A.x + len/2, box.vertex3A.y + len/2, box.vertex3A.z + len/2));
+    vertices26.push(new THREE.Vector3(box.vertex3A.x + len/2, box.vertex3A.y + len/2, box.vertex3A.z));
+    vertices26.push(new THREE.Vector3(box.vertex3A.x + len, box.vertex3A.y + len/2, box.vertex3A.z + len/2));
+    vertices26.push(new THREE.Vector3(box.vertex3A.x + len/2, box.vertex3A.y, box.vertex3A.z + len/2));
+
+    var vertices27 = [];
+    vertices27.push(new THREE.Vector3(box.vertex3A.x + len/2, box.vertex3A.y + len/2, box.vertex3A.z + len/2));
+    vertices27.push(new THREE.Vector3(box.vertex3A.x + len, box.vertex3A.y + len/2, box.vertex3A.z + len/2));
+    vertices27.push(new THREE.Vector3(box.vertex3A.x + len/2, box.vertex3A.y + len/2, box.vertex3A.z + len));
+    vertices27.push(new THREE.Vector3(box.vertex3A.x + len/2, box.vertex3A.y, box.vertex3A.z + len/2));
+
+    var vertices28 = [];
+    vertices28.push(new THREE.Vector3(box.vertex3A.x + len/2, box.vertex3A.y + len/2, box.vertex3A.z + len/2));
+    vertices28.push(new THREE.Vector3(box.vertex3A.x + len/2, box.vertex3A.y + len/2, box.vertex3A.z + len));
+    vertices28.push(new THREE.Vector3(box.vertex3A.x, box.vertex3A.y + len/2, box.vertex3A.z + len/2));
+    vertices28.push(new THREE.Vector3(box.vertex3A.x + len/2, box.vertex3A.y, box.vertex3A.z + len/2));
+
     tetrahedrons.push(new THREE.ConvexGeometry(vertices1));
     tetrahedrons.push(new THREE.ConvexGeometry(vertices2));
     tetrahedrons.push(new THREE.ConvexGeometry(vertices3));
@@ -882,6 +1003,22 @@ function splitBoxTo12Tetrahedrons(box) {
     tetrahedrons.push(new THREE.ConvexGeometry(vertices10));
     tetrahedrons.push(new THREE.ConvexGeometry(vertices11));
     tetrahedrons.push(new THREE.ConvexGeometry(vertices12));
+    tetrahedrons.push(new THREE.ConvexGeometry(vertices13));
+    tetrahedrons.push(new THREE.ConvexGeometry(vertices14));
+    tetrahedrons.push(new THREE.ConvexGeometry(vertices15));
+    tetrahedrons.push(new THREE.ConvexGeometry(vertices16));
+    tetrahedrons.push(new THREE.ConvexGeometry(vertices17));
+    tetrahedrons.push(new THREE.ConvexGeometry(vertices18));
+    tetrahedrons.push(new THREE.ConvexGeometry(vertices19));
+    tetrahedrons.push(new THREE.ConvexGeometry(vertices20));
+    tetrahedrons.push(new THREE.ConvexGeometry(vertices21));
+    tetrahedrons.push(new THREE.ConvexGeometry(vertices22));
+    tetrahedrons.push(new THREE.ConvexGeometry(vertices23));
+    tetrahedrons.push(new THREE.ConvexGeometry(vertices24));
+    tetrahedrons.push(new THREE.ConvexGeometry(vertices25));
+    tetrahedrons.push(new THREE.ConvexGeometry(vertices26));
+    tetrahedrons.push(new THREE.ConvexGeometry(vertices27));
+    tetrahedrons.push(new THREE.ConvexGeometry(vertices28));
 
     return tetrahedrons;
 }
@@ -1237,7 +1374,7 @@ var allConvex = [];
 function initBoxScene(options) {
 
     var edge_len = options.container.options.edge_len;
-    var thickness = 11;
+    var thickness = 50;
 
 
     // Ground
@@ -1335,7 +1472,7 @@ function randomGenAndPutInSubBox3(options) {
     // Randomly generate outbound sphere for the convex polyhedron to be generated
     var subBoxes = [];
     var randomFuncs = [];
-    var subStep = 30;
+    var subStep = 50;
     var interectionCount = 0;
 
 
@@ -1357,12 +1494,388 @@ function randomGenAndPutInSubBox3(options) {
 
                 randomFuncs.push(randomConvexNonIntersected(minR, maxR, minVertices, maxVertices, sub, randomSphereInBox));
                 subBoxes.push(sub);
-                switch (THREE.Math.randInt(0, 3)) {
+                //
+                switch (THREE.Math.randInt(0, 2)) {
                     case 0:
                         allConvex.push.apply(allConvex, splitBoxTo5Tetrahedrons(sub));
                         break;
                     case 1:
-                        allConvex.push.apply(allConvex, splitBoxTo12Tetrahedrons(sub));
+                        allConvex.push.apply(allConvex, splitBoxTo28Tetrahedrons(sub));
+                        break;
+                    case 2:
+                        allConvex.push.apply(allConvex, splitBoxTo4Hexahedron(sub));
+                        break;
+                    default :
+                        break;
+
+                }
+            }
+        }
+    }
+
+    // Randomize all convexs
+    for (var i = 0; i < allConvex.length; i++) {
+
+        var curr = allConvex[i];
+
+        // Compute sphere
+        curr.computeBoundingSphere();
+        var sphere = curr.boundingSphere;
+        var originX = sphere.center.x,
+            originY = sphere.center.y,
+            originZ = sphere.center.z;
+
+        //move to origin
+        var matrix = new THREE.Matrix4()
+            .makeTranslation(-originX, -originY, -originZ);
+        curr.applyMatrix(matrix);
+
+        // scale
+        var x = randomBetween(0.7, 1);
+        var y = randomBetween(0.7, 1);
+        var z = randomBetween(0.7, 1);
+
+        //y = x, z = x;
+
+        matrix = new THREE.Matrix4()
+            .makeScale(x, y, z);
+        curr.applyMatrix(matrix);
+
+        // move back
+        matrix = new THREE.Matrix4()
+            .makeTranslation(originX, originY, originZ);
+        curr.applyMatrix(matrix);
+
+
+        curr.edges = extractEdges(curr.faces, 3);
+        curr.computeBoundingSphere();
+        //if (hasIntersection(allConvex, curr, areIntersectedPolyhedrons)) {
+        //    console.log("Intersection count : " + (++interectionCount));
+        //
+        //    // move to origin
+        //    var matrix = new THREE.Matrix4()
+        //        .makeTranslation(-originX, -originY, -originZ);
+        //    curr.applyMatrix(matrix);
+        //
+        //    matrix = new THREE.Matrix4()
+        //        .makeScale(1/x, 1/y, 1/z);
+        //    curr.applyMatrix(matrix);
+        //
+        //    // move back
+        //    matrix = new THREE.Matrix4()
+        //        .makeTranslation(originX, originY, originZ);
+        //    curr.applyMatrix(matrix);
+        //}
+
+    }
+
+    var ITER_COUNT = 10;
+
+    for (var i = 0; i < allConvex.length; i++) {
+
+        //var curr = allConvex[i].clone();
+        var curr = allConvex[i];
+        curr.edges = allConvex[i].edges;
+
+        var sphere = allConvex[i].boundingSphere;
+        var originX = sphere.center.x,
+            originY = sphere.center.y,
+            originZ = sphere.center.z;
+        for (var j = 0; j < ITER_COUNT; j++) {
+            // intersection happens
+            var success = false;
+            switch (THREE.Math.randInt(1, 3)) {
+                case 1:
+                    // try rotate the convex
+                    var xa = randomBetween(-15, 15),
+                        xb = randomBetween(-15, 15),
+                        xc = randomBetween(-15, 15),
+                        euler = new THREE.Euler(xa, xb, xc, 'XYZ'),
+
+                        matrix = new THREE.Matrix4()
+                            .makeTranslation(-originX, -originY, -originZ);
+                    curr.applyMatrix(matrix);
+
+                    matrix = new THREE.Matrix4()
+                        .makeRotationFromEuler(euler)
+                    curr.applyMatrix(matrix);
+
+                    matrix = new THREE.Matrix4()
+                        .makeTranslation(originX, originY, originZ);
+                    curr.applyMatrix(matrix);
+
+                    //if (hasIntersection(allConvex, curr, areIntersectedPolyhedrons)) {
+                    //    console.log("Intersection count : " + (++interectionCount));
+                    //    euler = new THREE.Euler(-xa, -xb, -xc, 'ZYX');
+                    //
+                    //    matrix = new THREE.Matrix4()
+                    //        .makeTranslation(-originX, -originY, -originZ);
+                    //    curr.applyMatrix(matrix);
+                    //
+                    //    matrix = new THREE.Matrix4()
+                    //        .makeRotationFromEuler(euler)
+                    //    curr.applyMatrix(matrix);
+                    //
+                    //    matrix = new THREE.Matrix4()
+                    //        .makeTranslation(originX, originY, originZ);
+                    //    curr.applyMatrix(matrix);
+                    //    continue;
+                    //} else {
+                    //    success = true;
+                    //}
+                    break;
+
+                case 2:
+                    // try transform
+                    var xt = randomBetween(-15, 15),
+                        yt = randomBetween(-15, 15),
+                        zt = randomBetween(-15, 15),
+
+
+                        matrix = new THREE.Matrix4().makeTranslation(xt, yt, zt);
+                    curr.applyMatrix(matrix);
+                    var out = isPolyhedronOutOfBox(container, curr);
+                    var inter = hasIntersection(allConvex, curr, areIntersectedPolyhedrons);
+                    if (!out && !inter) {
+
+                        success = true;
+                    } else {
+                        //console.log("Intersection count : " + (++interectionCount));
+                        success = false;
+                        matrix = new THREE.Matrix4().makeTranslation(-xt, -yt, -zt);
+                        curr.applyMatrix(matrix);
+                    }
+                    break;
+
+
+                default:
+                    break;
+            }
+
+            if (success) break;
+        }
+
+
+    }
+
+    // Output
+    for (var i = 0; i < allConvex.length; i++) {
+
+        var materials = [
+            new THREE.MeshLambertMaterial({ambient: Math.random() * 16777215}),
+            new THREE.MeshBasicMaterial({
+                color: Math.random() * 16777215,
+                wireframe: true,
+                transparent: true,
+                opacity: 1
+            })
+        ];
+
+
+        var convex = allConvex[i];
+        if (convex == undefined) continue;
+        var volume = calculate(convex);
+        //if (volume < 20) continue;
+        totalVolume += volume;
+        rate = (totalVolume / containerVolume) * 100
+        // console.log("Vertices: " + JSON.stringify(convex.vertices));
+        // console.log("Current: " + volume);
+        // console.log("Total: " + totalVolume);
+        // console.log("containerVolume: " + containerVolume);
+        //console.log("Intersection count : " +interectionCount);
+        //var object = THREE.SceneUtils.createMultiMaterialObject(convex, materials);
+        var shape = new Physijs.ConvexMesh(
+            allConvex[i],
+            materials[0]
+        );
+
+        //shape.addEventListener('collision', function(other_object, linear_velocity) {
+        //    var _vector = new THREE.Vector3;
+        //    _vector.set( 0, 0, 0 );
+        //    this.setAngularFactor( _vector );
+        //    this.setAngularVelocity( _vector );
+        //    this.setLinearFactor( _vector );
+        //    this.setLinearVelocity( _vector );
+        //});
+        scene.add(shape);
+    }
+    console.log("Rate: " + rate);
+
+    var interval = 4000;
+    var g = 60;
+    //setTimeout(function() {
+    //
+    //    scene.setGravity(new THREE.Vector3( 0, g, 0 ));
+    //    setTimeout(function() {
+    //        scene.setGravity(new THREE.Vector3( -g, 0, 0 ));
+    //        setTimeout(function() {
+    //            scene.setGravity(new THREE.Vector3(g, 0, 0));
+    //            setTimeout(function() {
+    //                scene.setGravity(new THREE.Vector3( 0, 0, -g ));
+    //                setTimeout(function() {
+    //                    scene.setGravity(new THREE.Vector3( 0, 0, g ));
+    //                }, interval);
+    //            }, interval);
+    //        }, interval);
+    //    }, interval);
+    //}, interval);
+
+
+}
+
+function initCylinderScene(options) {
+
+    var radius = options.container.options.radius;
+    var height = options.container.options.height + 2;
+    var path_dist = 0;
+    var thickness = 32;
+    var segments = 36;
+
+    // Ground
+    ground = new Physijs.BoxMesh(
+        new THREE.BoxGeometry(radius * 2.5 + thickness, thickness, radius * 2.5 + thickness),
+        //new THREE.PlaneGeometry(50, 50),
+        ground_material,
+        0 // mass
+    );
+    ground.position.x = radius;
+    ground.position.y = -thickness/2;
+    ground.position.z = radius;
+
+    ground.receiveShadow = true;
+    scene.add( ground );
+    scene.position.set(0, 0, 0);
+
+    // Bumpers
+    //var CustomSinCurve = THREE.Curve.create(
+    //    function ( scale ) { //custom curve constructor
+    //        this.scale = (scale === undefined) ? 1 : scale;
+    //    },
+    //
+    //    function ( t ) { //getPoint: t is between 0-1
+    //        var tx = Math.cos(2 * Math.PI * t),
+    //            ty = 0,
+    //            tz = Math.sin(2 * Math.PI * t);
+    //
+    //        return new THREE.Vector3(tx, ty, tz).multiplyScalar(this.scale);
+    //    }
+    //);
+    //
+    //var path = new THREE.LineCurve3( new THREE.Vector3(path_dist, 0, path_dist), new THREE.Vector3(path_dist, height, path_dist) );
+
+    var bumper,
+        bumper_geom = new THREE.BoxGeometry(10, height + thickness, Math.PI * radius * radius / (segments*5));
+
+
+    // Wall
+    for (var i = 0; i < segments; i++) {
+        bumper = new Physijs.BoxMesh(
+            bumper_geom,
+            wall_material,
+            //ground_material,
+            0 // mass
+
+        );
+        var grad = 2 * i * Math.PI / segments;
+        bumper.position.x = radius + thickness/2 + radius * Math.cos(grad);
+        bumper.position.y = radius;
+        bumper.position.z = radius + thickness/2 + radius * Math.sin(grad);
+        bumper.rotation.y = -grad;
+        scene.add(bumper);
+    }
+
+    // Top
+
+    bumper_geom = new THREE.CylinderGeometry(radius * 1.5, radius * 1.5, thickness, segments);
+    bumper = new Physijs.CylinderMesh( bumper_geom, ground_material, 0, { restitution: .2 } );
+    bumper.position.y = height + thickness/2;
+    bumper.position.x = radius;
+    bumper.position.z = radius;
+    //bumper.rotation.z = Math.PI / 2;
+    bumper.receiveShadow = true;
+    bumper.castShadow = true;
+    scene.add( bumper );
+
+}
+function randomGenAndPutInCylinder(options) {
+
+    //var radius = options.container.options.radius;
+    //var height = options.container.options.height + 2;
+    //var path_dist = 0;
+    //var thickness = 11;
+    //var segments = 36;
+    //
+    //var cylinder_geometry = new THREE.CylinderGeometry(75, 75, 150, 32);
+    //var cylinder = new THREE.Mesh(cylinder_geometry);
+    //var cylinderVolume = calcVolumeOfCylinder(cylinder_geometry);
+    //
+    //var box_len = 1.414 * cylinder_geometry.parameters.radiusTop;
+    //var box_origin = (1 - Math.sqrt(2)/2) * cylinder_geometry.parameters.radiusTop;
+    //var box_height = cylinder_geometry.parameters.height;
+    //var box = {
+    //    vertex3A: new THREE.Vector3(box_origin, 0, box_origin),
+    //    vertex3B: new THREE.Vector3(box_len, box_height, box_len),
+    //    randomFunc: function(){}
+    //};
+
+
+    var radius = options.container.options.radius;
+    var height = options.container.options.height + 2;
+    var path_dist = 0;
+    var thickness = 11;
+    var segments = 36;
+
+    var cylinder_geometry = new THREE.CylinderGeometry(radius, radius, height, segments);
+    //var cylinder = new THREE.Mesh(cylinder_geometry);
+    var cylinderVolume = calcVolumeOfCylinder(cylinder_geometry);
+
+    var box_len = Math.sqrt(2) * radius;
+    var box_origin = (1 - Math.sqrt(2)/2) * radius;
+    var box_height = height;
+    var box = {
+        vertex3A: new THREE.Vector3(box_origin, 0, box_origin),
+        vertex3B: new THREE.Vector3(box_origin + box_len, box_height, box_origin + box_len),
+        randomFunc: function(){}
+    };
+
+    var boxVolume = calcVolumeOfBox(box);
+
+    var container = box;
+    var containerVolume = cylinderVolume;
+
+
+    var minR = 5, maxR = 10;
+    var minVertices = 4, maxVertices = 4;
+
+    var subBoxes = [];
+    var randomFuncs = [];
+    var subStep = 30;
+    var interectionCount = 0;
+
+    // Iter through sub boxes
+    var xitercount = Math.floor((container.vertex3B.x - container.vertex3A.x) / subStep),
+        yitercount = Math.floor((container.vertex3B.y - container.vertex3A.y) / subStep),
+        zitercount = Math.floor((container.vertex3B.z - container.vertex3A.z) / subStep);
+
+    for (var i = 0; i < xitercount; i++) {
+
+        for (var j = 0; j < yitercount; j++) {
+
+            for (var k = 0; k < zitercount; k++) {
+
+                var sub = {
+                    vertex3A: new THREE.Vector3(container.vertex3A.x + i * subStep, container.vertex3A.y + j * subStep, container.vertex3A.z + k * subStep),
+                    vertex3B: new THREE.Vector3(container.vertex3A.x + (i + 1) * subStep, container.vertex3A.y + (j + 1) * subStep, container.vertex3A.z + (k + 1) * subStep)
+                };
+
+                randomFuncs.push(randomConvexNonIntersected(minR, maxR, minVertices, maxVertices, sub, randomSphereInBox));
+                subBoxes.push(sub);
+                switch (THREE.Math.randInt(0, 2)) {
+                    case 0:
+                        allConvex.push.apply(allConvex, splitBoxTo5Tetrahedrons(sub));
+                        break;
+                    case 1:
+                        allConvex.push.apply(allConvex, splitBoxTo28Tetrahedrons(sub));
                         break;
                     case 2:
                         allConvex.push.apply(allConvex, splitBoxTo4Hexahedron(sub));
@@ -1393,9 +1906,9 @@ function randomGenAndPutInSubBox3(options) {
         curr.applyMatrix(matrix);
 
         // scale
-        var x = randomBetween(0.7, 0.9);
-        var y = randomBetween(0.7, 0.9);
-        var z = randomBetween(0.7, 0.9);
+        var x = randomBetween(1, 1);
+        var y = randomBetween(1, 1);
+        var z = randomBetween(1, 1);
 
         //y = x, z = x;
 
@@ -1496,13 +2009,13 @@ function randomGenAndPutInSubBox3(options) {
 
                         matrix = new THREE.Matrix4().makeTranslation(xt, yt, zt);
                     curr.applyMatrix(matrix);
-                    var out = isPolyhedronOutOfBox(container, curr);
+                    var out = isPolyhedronOutOfCylinder(cylinder_geometry, curr);
                     var inter = hasIntersection(allConvex, curr, areIntersectedPolyhedrons);
                     if (!out && !inter) {
 
                         success = true;
                     } else {
-                        console.log("Intersection count : " + (++interectionCount));
+                        //console.log("Intersection count : " + (++interectionCount));
                         success = false;
                         matrix = new THREE.Matrix4().makeTranslation(-xt, -yt, -zt);
                         curr.applyMatrix(matrix);
@@ -1544,398 +2057,24 @@ function randomGenAndPutInSubBox3(options) {
         // console.log("Current: " + volume);
         // console.log("Total: " + totalVolume);
         // console.log("containerVolume: " + containerVolume);
-        console.log("Rate: " + rate);
-        console.log("Intersection count : " +interectionCount);
+        //console.log("Rate: " + rate);
+        //console.log("Intersection count : " +interectionCount);
         //var object = THREE.SceneUtils.createMultiMaterialObject(convex, materials);
         var shape = new Physijs.ConvexMesh(
             allConvex[i],
             materials[0]
         );
 
-        shape.addEventListener('collision', function(other_object, linear_velocity) {
-            var _vector = new THREE.Vector3;
-            _vector.set( 0, 0, 0 );
-            this.setAngularFactor( _vector );
-            this.setAngularVelocity( _vector );
-            this.setLinearFactor( _vector );
-            this.setLinearVelocity( _vector );
-        });
+        //shape.addEventListener('collision', function(other_object, linear_velocity) {
+        //    var _vector = new THREE.Vector3;
+        //    _vector.set( 0, 0, 0 );
+        //    this.setAngularFactor( _vector );
+        //    this.setAngularVelocity( _vector );
+        //    this.setLinearFactor( _vector );
+        //    this.setLinearVelocity( _vector );
+        //});
         scene.add(shape);
-    }
-
-    var interval = 4000;
-    var g = 60;
-    //setTimeout(function() {
-    //
-    //    scene.setGravity(new THREE.Vector3( 0, g, 0 ));
-    //    setTimeout(function() {
-    //        scene.setGravity(new THREE.Vector3( -g, 0, 0 ));
-    //        setTimeout(function() {
-    //            scene.setGravity(new THREE.Vector3(g, 0, 0));
-    //            setTimeout(function() {
-    //                scene.setGravity(new THREE.Vector3( 0, 0, -g ));
-    //                setTimeout(function() {
-    //                    scene.setGravity(new THREE.Vector3( 0, 0, g ));
-    //                }, interval);
-    //            }, interval);
-    //        }, interval);
-    //    }, interval);
-    //}, interval);
-
-
-}
-
-function initCylinderScene(options) {
-
-    var radius = options.container.options.radius;
-    var height = options.container.options.height + 2;
-    var path_dist = 0;
-    var thickness = 11;
-    var segments = 36;
-
-    // Ground
-    ground = new Physijs.BoxMesh(
-        new THREE.BoxGeometry(radius * 2 + thickness, thickness, radius * 2 + thickness),
-        //new THREE.PlaneGeometry(50, 50),
-        ground_material,
-        0 // mass
-    );
-    ground.position.x = radius;
-    ground.position.y = 0;
-    ground.position.z = radius;
-
-    ground.receiveShadow = true;
-    scene.add( ground );
-    scene.position.set(0, 0, 0);
-
-    // Bumpers
-    //var CustomSinCurve = THREE.Curve.create(
-    //    function ( scale ) { //custom curve constructor
-    //        this.scale = (scale === undefined) ? 1 : scale;
-    //    },
-    //
-    //    function ( t ) { //getPoint: t is between 0-1
-    //        var tx = Math.cos(2 * Math.PI * t),
-    //            ty = 0,
-    //            tz = Math.sin(2 * Math.PI * t);
-    //
-    //        return new THREE.Vector3(tx, ty, tz).multiplyScalar(this.scale);
-    //    }
-    //);
-    //
-    //var path = new THREE.LineCurve3( new THREE.Vector3(path_dist, 0, path_dist), new THREE.Vector3(path_dist, height, path_dist) );
-
-    var bumper,
-        bumper_geom = new THREE.BoxGeometry(1, height, Math.PI * radius * radius / (segments*10));
-
-
-    // Wall
-    for (var i = 0; i < segments; i++) {
-        bumper = new Physijs.BoxMesh(
-            bumper_geom,
-            wall_material,
-            //ground_material,
-            0 // mass
-
-        );
-        var grad = 2 * i * Math.PI / segments;
-        bumper.position.x = radius + radius * Math.cos(grad);
-        bumper.position.y = radius;
-        bumper.position.z = radius + radius * Math.sin(grad);
-        bumper.rotation.y = -grad;
-        scene.add(bumper);
-    }
-
-    // Top
-
-    bumper_geom = new THREE.CylinderGeometry(radius, radius, thickness, segments);
-    bumper = new Physijs.CylinderMesh( bumper_geom, wall_material, 0, { restitution: .2 } );
-    bumper.position.y = height + 6;
-    bumper.position.x = radius;
-    bumper.position.z = radius;
-    //bumper.rotation.z = Math.PI / 2;
-    bumper.receiveShadow = true;
-    bumper.castShadow = true;
-    scene.add( bumper );
-
-}
-function randomGenAndPutInCylinder(options) {
-
-    //var radius = options.container.options.radius;
-    //var height = options.container.options.height + 2;
-    //var path_dist = 0;
-    //var thickness = 11;
-    //var segments = 36;
-    //
-    //var cylinder_geometry = new THREE.CylinderGeometry(75, 75, 150, 32);
-    //var cylinder = new THREE.Mesh(cylinder_geometry);
-    //var cylinderVolume = calcVolumeOfCylinder(cylinder_geometry);
-    //
-    //var box_len = 1.414 * cylinder_geometry.parameters.radiusTop;
-    //var box_origin = (1 - Math.sqrt(2)/2) * cylinder_geometry.parameters.radiusTop;
-    //var box_height = cylinder_geometry.parameters.height;
-    //var box = {
-    //    vertex3A: new THREE.Vector3(box_origin, 0, box_origin),
-    //    vertex3B: new THREE.Vector3(box_len, box_height, box_len),
-    //    randomFunc: function(){}
-    //};
-
-
-    var radius = options.container.options.radius;
-    var height = options.container.options.height + 2;
-    var path_dist = 0;
-    var thickness = 11;
-    var segments = 36;
-
-    var cylinder_geometry = new THREE.CylinderGeometry(radius, radius, height, segments);
-    //var cylinder = new THREE.Mesh(cylinder_geometry);
-    var cylinderVolume = calcVolumeOfCylinder(cylinder_geometry);
-
-    var box_len = Math.sqrt(2) * radius;
-    var box_origin = (1 - Math.sqrt(2)/2) * radius;
-    var box_height = height;
-    var box = {
-        vertex3A: new THREE.Vector3(box_origin, 0, box_origin),
-        vertex3B: new THREE.Vector3(box_origin + box_len, box_height, box_origin + box_len),
-        randomFunc: function(){}
-    };
-
-    var boxVolume = calcVolumeOfBox(box);
-
-    var container = box;
-    var containerVolume = cylinderVolume;
-
-
-    var minR = 5, maxR = 10;
-    var minVertices = 4, maxVertices = 4;
-
-    var subBoxes = [];
-    var randomFuncs = [];
-    var subStep = 30;
-    var interectionCount = 0;
-
-    // Iter through sub boxes
-    var xitercount = Math.floor((container.vertex3B.x - container.vertex3A.x) / subStep),
-        yitercount = Math.floor((container.vertex3B.y - container.vertex3A.y) / subStep),
-        zitercount = Math.floor((container.vertex3B.z - container.vertex3A.z) / subStep);
-
-    for (var i = 0; i < xitercount; i++) {
-
-        for (var j = 0; j < yitercount; j++) {
-
-            for (var k = 0; k < zitercount; k++) {
-
-                var sub = {
-                    vertex3A: new THREE.Vector3(container.vertex3A.x + i * subStep, container.vertex3A.y + j * subStep, container.vertex3A.z + k * subStep),
-                    vertex3B: new THREE.Vector3(container.vertex3A.x + (i + 1) * subStep, container.vertex3A.y + (j + 1) * subStep, container.vertex3A.z + (k + 1) * subStep)
-                };
-
-                randomFuncs.push(randomConvexNonIntersected(minR, maxR, minVertices, maxVertices, sub, randomSphereInBox));
-                subBoxes.push(sub);
-                switch (THREE.Math.randInt(0, 0)) {
-                    case 0:
-                        allConvex.push.apply(allConvex, splitBoxTo5Tetrahedrons(sub));
-                        break;
-                    case 1:
-                        allConvex.push.apply(allConvex, splitBoxTo12Tetrahedrons(sub));
-                        break;
-                    case 2:
-                        allConvex.push.apply(allConvex, splitBoxTo4Hexahedron(sub));
-                        break;
-                    case 3:
-                        break;
-
-                }
-            }
-        }
-    }
-
-    // Randomize all convexs
-    for (var i = 0; i < allConvex.length; i++) {
-
-        var curr = allConvex[i];
-
-        // Compute sphere
-        curr.computeBoundingSphere();
-        var sphere = curr.boundingSphere;
-        var originX = sphere.center.x,
-            originY = sphere.center.y,
-            originZ = sphere.center.z;
-
-        //move to origin
-        var matrix = new THREE.Matrix4()
-            .makeTranslation(-originX, -originY, -originZ);
-        //curr.applyMatrix(matrix);
-
-        // scale
-        var x = randomBetween(0.7, 0.9);
-        var y = randomBetween(0.7, 0.9);
-        var z = randomBetween(0.7, 0.9);
-
-        //y = x, z = x;
-
-        matrix = new THREE.Matrix4()
-            .makeScale(x, y, z);
-        //curr.applyMatrix(matrix);
-
-        // move back
-        matrix = new THREE.Matrix4()
-            .makeTranslation(originX, originY, originZ);
-        //curr.applyMatrix(matrix);
-
-
-        curr.edges = extractEdges(curr.faces, 3);
-        curr.computeBoundingSphere();
-        //if (hasIntersection(allConvex, curr, areIntersectedPolyhedrons)) {
-        //    console.log("Intersection count : " + (++interectionCount));
-        //
-        //    // move to origin
-        //    var matrix = new THREE.Matrix4()
-        //        .makeTranslation(-originX, -originY, -originZ);
-        //    curr.applyMatrix(matrix);
-        //
-        //    matrix = new THREE.Matrix4()
-        //        .makeScale(1/x, 1/y, 1/z);
-        //    curr.applyMatrix(matrix);
-        //
-        //    // move back
-        //    matrix = new THREE.Matrix4()
-        //        .makeTranslation(originX, originY, originZ);
-        //    curr.applyMatrix(matrix);
-        //}
-
-    }
-
-    var ITER_COUNT = 100;
-
-    for (var i = 0; i < allConvex.length; i++) {
-
-        //var curr = allConvex[i].clone();
-        var curr = allConvex[i];
-        curr.edges = allConvex[i].edges;
-
-        var sphere = allConvex[i].boundingSphere;
-        var originX = sphere.center.x,
-            originY = sphere.center.y,
-            originZ = sphere.center.z;
-        for (var j = 0; j < ITER_COUNT; j++) {
-            // intersection happens
-            var success = false;
-            switch (THREE.Math.randInt(0, 0)) {
-                case 1:
-                    // try rotate the convex
-                    var xa = randomBetween(-15, 15),
-                        xb = randomBetween(-15, 15),
-                        xc = randomBetween(-15, 15),
-                        euler = new THREE.Euler(xa, xb, xc, 'XYZ'),
-
-                        matrix = new THREE.Matrix4()
-                            .makeTranslation(-originX, -originY, -originZ);
-                    curr.applyMatrix(matrix);
-
-                    matrix = new THREE.Matrix4()
-                        .makeRotationFromEuler(euler)
-                    curr.applyMatrix(matrix);
-
-                    matrix = new THREE.Matrix4()
-                        .makeTranslation(originX, originY, originZ);
-                    curr.applyMatrix(matrix);
-
-                    //if (hasIntersection(allConvex, curr, areIntersectedPolyhedrons)) {
-                    //    console.log("Intersection count : " + (++interectionCount));
-                    //    euler = new THREE.Euler(-xa, -xb, -xc, 'ZYX');
-                    //
-                    //    matrix = new THREE.Matrix4()
-                    //        .makeTranslation(-originX, -originY, -originZ);
-                    //    curr.applyMatrix(matrix);
-                    //
-                    //    matrix = new THREE.Matrix4()
-                    //        .makeRotationFromEuler(euler)
-                    //    curr.applyMatrix(matrix);
-                    //
-                    //    matrix = new THREE.Matrix4()
-                    //        .makeTranslation(originX, originY, originZ);
-                    //    curr.applyMatrix(matrix);
-                    //    continue;
-                    //} else {
-                    //    success = true;
-                    //}
-                    break;
-
-                case 2:
-                    // try transform
-                    var xt = randomBetween(-15, 15),
-                        yt = randomBetween(-15, 15),
-                        zt = randomBetween(-15, 15),
-
-
-                        matrix = new THREE.Matrix4().makeTranslation(xt, yt, zt);
-                    curr.applyMatrix(matrix);
-                    var out = isPolyhedronOutOfBox(container, curr);
-                    var inter = hasIntersection(allConvex, curr, areIntersectedPolyhedrons);
-                    if (!out && !inter) {
-
-                        success = true;
-                    } else {
-                        console.log("Intersection count : " + (++interectionCount));
-                        success = false;
-                        matrix = new THREE.Matrix4().makeTranslation(-xt, -yt, -zt);
-                        curr.applyMatrix(matrix);
-                    }
-                    break;
-
-
-                default:
-                    break;
-            }
-
-            if (success) break;
-        }
-
-
-    }
-
-    // Output
-    for (var i = 0; i < allConvex.length; i++) {
-
-        var materials = [
-            new THREE.MeshLambertMaterial({ambient: Math.random() * 16777215}),
-            new THREE.MeshBasicMaterial({
-                color: Math.random() * 16777215,
-                wireframe: true,
-                transparent: true,
-                opacity: 1
-            })
-        ];
-
-
-        var convex = allConvex[i];
-        if (convex == undefined) continue;
-        var volume = calculate(convex);
-        //if (volume < 20) continue;
-        totalVolume += volume;
-        rate = (totalVolume / containerVolume) * 100
-        // console.log("Vertices: " + JSON.stringify(convex.vertices));
-        // console.log("Current: " + volume);
-        // console.log("Total: " + totalVolume);
-        // console.log("containerVolume: " + containerVolume);
         console.log("Rate: " + rate);
-        console.log("Intersection count : " +interectionCount);
-        //var object = THREE.SceneUtils.createMultiMaterialObject(convex, materials);
-        var shape = new Physijs.ConvexMesh(
-            allConvex[i],
-            materials[0]
-        );
-
-        shape.addEventListener('collision', function(other_object, linear_velocity) {
-            var _vector = new THREE.Vector3;
-            _vector.set( 0, 0, 0 );
-            this.setAngularFactor( _vector );
-            this.setAngularVelocity( _vector );
-            this.setLinearFactor( _vector );
-            this.setLinearVelocity( _vector );
-        });
-        scene.add(shape);
     }
 
     var interval = 4000;

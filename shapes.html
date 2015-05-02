@@ -124,7 +124,7 @@
 
 		readFile("cfg.json", function (options) {
 
-			console.log(JSON.stringify(options));
+//			console.log(JSON.stringify(options));
 			options = JSON.parse(options);
 			if (options.container.type == "cylinder") {
 				initCylinderScene(options);
@@ -204,8 +204,20 @@
 
 //			console.log(result);
 
-			var blob = new Blob([result], {type: 'text/plain'});
-			saveAs(blob, "result.me");
+//			var blob = new Blob([result], {type: 'text/plain'});
+//			saveAs(blob, "result.me");
+//			downloadFile(result);
+
+			var ipc = require('ipc');
+			if (ipc.sendSync('synchronous-message', result) == "close") { // prints "pong"
+
+//				window.close();
+			}
+
+//			ipc.on('asynchronous-reply', function(arg) {
+//				console.log(arg); // prints "pong"
+//			});
+//			ipc.send('asynchronous-message', 'ping');
 
 		}, 30000);
 
