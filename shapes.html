@@ -3,6 +3,8 @@
 <html>
 
 <head>
+	<meta charset='utf-8'>
+	<meta http-equiv="X-UA-Compatible" content="chrome=1">
 	<title>Shape emitter - Physijs</title>
 	
 	<link rel="stylesheet" type="text/css" href="stylesheets/styles.css" />
@@ -142,7 +144,7 @@
 
 			var box = {
 				vertex3A: new THREE.Vector3(0, 0, 0),
-				vertex3B: new THREE.Vector3(edge_len, edge_len, edge_len),
+				vertex3B: new THREE.Vector3(edge_len, edge_len, edge_len)
 			};
 			var boxVolume = calcVolumeOfBox(box);
 
@@ -455,7 +457,7 @@
 					rate = total_volume / box_volume;
 					// console.log("Vertices: " + JSON.stringify(convex_geometry.vertices));
 					console.log("Volume: " + volume);
-					console.log("Rate: " + rate * 100 + "%")
+					console.log("Rate: " + rate * 100 + "%");
 
 					break;
 			}
@@ -557,5 +559,4 @@
 	</div>
 	<div id="viewport"></div>
 </body>
-
 </html>

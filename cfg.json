@@ -29,7 +29,7 @@
   "high_volume_ratio": false,
 
   "enable_simulation": true,
-  "simulation_interval": 100000,
+  "simulation_interval": 10000,
   "simulation_iter_count": 50
 
 
