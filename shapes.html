@@ -74,9 +74,9 @@
 			1000
 		);
 		// camera.position.set( 60, 50, 60 );
-//		camera.position.set( 450, 350, 450 );
-		camera.position.set( 450, 150, 450 );
-//		camera.position.set( 0, 350, 0 );
+		camera.position.set( 650, 350, 650 );
+//		camera.position.set( 450, 150, 450 );
+//		camera.position.set( 0, 850, 0 );
 //		camera.position.set( 450, 0, 450 );
 
 		camera.lookAt( scene.position );
@@ -126,21 +126,42 @@
 //		ipc.send('options', 'options');
 //		ipc.on('options', function(event, options) {
 
-		var recurCount = 10;
-		readFile("cfg.json", function (options) {
+		readFile("../cfg.json", function (options) {
 
 			var containerVolume = 0;
 //			console.log(JSON.stringify(options));
 			options = JSON.parse(options);
-			var use_engine = false;
+			var type = options.container.type;
+			var use_engine = false || options.enable_simulation;
+			var recurCount = options.simulation_iter_count;
+			var simulation_interval = options.simulation_interval;
+			var high_volume_ratio = options.high_volume_ratio;
+			var edge_len = options.container.options.edge_len;
+			var radius = options.container.options.radius;
+			var height = options.container.options.height;
+
+			var box = {
+				vertex3A: new THREE.Vector3(0, 0, 0),
+				vertex3B: new THREE.Vector3(edge_len, edge_len, edge_len),
+			};
+			var boxVolume = calcVolumeOfBox(box);
+
+			var cylinder_geometry = new THREE.CylinderGeometry(radius, radius, height, 36);
+			var cylinder = new THREE.Mesh(cylinder_geometry);
+			var cylinderVolume = calcVolumeOfCylinder(cylinder_geometry);
 
 			var randomFunc, initFunc;
-			if (options.container.type == "cylinder") {
+			if (type == "cylinder") {
 				containerVolume = calcVolumeOfCylinder(new THREE.CylinderGeometry(options.container.options.radius, options.container.options.radius, options.container.options.height));
 				initFunc = initCylinderScene;
 				requestAnimationFrame(render);
 				scene.simulate();
-				randomFunc = randomGenAndPutInCylinder;
+				randomFunc = randomGenAndPut;
+				initFunc(options);
+
+				if (high_volume_ratio) {
+					outPut(randomGenAndPutInCylinder(options), containerVolume, use_engine);
+				}
 			} else {
 				containerVolume = calcVolumeOfBox({
 					vertex3A: new THREE.Vector3(0, 0, 0),
@@ -151,7 +172,10 @@
 				scene.simulate();
 //				randomGenAndPutInSubBox3(options);
 				randomFunc = randomGenAndPut;
-				outPut(randomGenAndPutInSubBox3(options), containerVolume);
+				initFunc(options);
+				if (high_volume_ratio) {
+					outPut(randomGenAndPutInSubBox3(options), containerVolume, use_engine);
+				}
 			}
 
 
@@ -164,66 +188,106 @@
 
 			var mainFunc = function() {
 
-				console.log("RecurCount: " + recurCount);
+				console.log("Iter: " + recurCount);
+				outPut(randomFunc(options), containerVolume, use_engine);
 				recurCount--;
 				// Get current geometries
 				if (use_engine) {
-					for (var i = 9; i < scene.children.length; i++) {
+					for (var i = 0; i < scene.children.length; i++) {
 						var curr = scene.children[i].geometry;
-						var curr_matrix = scene.children[i].matrix;
-
-						curr.applyMatrix(curr_matrix);
-					}
-				}
-
-				initFunc(options);
-				outPut(randomFunc(options), containerVolume);
-				scene.setGravity(new THREE.Vector3( randomBetween(-10, 10), randomBetween(-10, 10), randomBetween(-10, 10) ));
-
-
-//				return function () {
-					if (recurCount > 0) {
-//						console.log("RecurCount: " + recurCount);
-						setTimeout(mainFunc, recurCount * 1000);
-					} else {
-						var result = "";
-						for (var i = 9; i < scene.children.length; i++) {
-							var curr = scene.children[i].geometry;
+						if (curr instanceof THREE.ConvexGeometry) {
 							var curr_matrix = scene.children[i].matrix;
 
 							curr.applyMatrix(curr_matrix);
-
-							var points = [];
-							for (var j = 0; j < curr.vertices.length; j++) {
-								points.push([curr.vertices[j].x, curr.vertices[j].y, curr.vertices[j].z]);
+							if (type == "cylinder") {
+								if (isPolyhedronOutOfCylinder(cylinder_geometry, curr)) {
+									scene.children[i] = scene.children[scene.children.length - 1];
+									scene.children.pop();
+									allConvex[allConvex.indexOf(curr)] = allConvex[allConvex.length - 1];
+									allConvex.pop();
+//									scene.children.splice(i, 1);
+//									allConvex.splice(allConvex.indexOf(curr), 1);
+									i--;
+								}
+							} else {
+								if (isPolyhedronOutOfBox(box, curr)) {
+									scene.children[i] = scene.children[scene.children.length - 1];
+									scene.children.pop();
+									allConvex[allConvex.indexOf(curr)] = allConvex[allConvex.length - 1];
+									allConvex.pop();
+//									scene.children.splice(i, 1);
+//									allConvex.splice(allConvex.indexOf(curr), 1);
+									i--;
+								}
 							}
-
-							var faces = [];
-							for (var j = 0; j < curr.faces.length; j++) {
-								faces.push([curr.faces[j].a, curr.faces[j].b, curr.faces[j].c]);
-							}
-
-							result +=
-									"polyhedron("
-									+ "points="
-									+ JSON.stringify(points)
-									+ ","
-									+ "faces="
-									+ JSON.stringify(faces)
-									+ ""
-									+ ");\n";
-
 						}
+					}
+				}
 
-						if (ipc.sendSync('synchronous-message', result) == "close") { // prints "pong"
-
-//							window.close();
-						}
+//				return function () {
+					if (recurCount > 0) {
+//						initFunc(options);
+//						console.log("RecurCount: " + recurCount);
+						scene.setGravity(new THREE.Vector3( randomBetween(-10, 10), randomBetween(-10, 10), randomBetween(-10, 10) ));
+						setTimeout(mainFunc, simulation_interval);
+					} else {
+						writeResult();
 					}
 //				}
 
 			};
-			mainFunc();
+			function writeResult() {
+
+				var vols = 0;
+				var rt = 0;
+
+				var result = "";
+				for (var i = 9; i < allConvex.length; i++) {
+					var curr = allConvex[i];
+
+					var points = [];
+					for (var j = 0; j < curr.vertices.length; j++) {
+						points.push([curr.vertices[j].x, curr.vertices[j].y, curr.vertices[j].z]);
+					}
+
+					var faces = [];
+					for (var j = 0; j < curr.faces.length; j++) {
+						faces.push([curr.faces[j].a, curr.faces[j].b, curr.faces[j].c]);
+					}
+
+					result +=
+							"polyhedron("
+							+ "points="
+							+ JSON.stringify(points)
+							+ ","
+							+ "faces="
+							+ JSON.stringify(faces)
+							+ ""
+							+ ");\n";
+
+					vols += calculate(curr);
+					rt = (vols / containerVolume) * 100;
+					console.log("Final Rate: " + rt + "%");
+
+				}
+
+				if (ipc.sendSync('synchronous-message', result) == "close") { // prints "pong"
+
+//							window.close();
+				}
+			}
+
+			if (use_engine) {
+				mainFunc();
+			} else {
+
+				for (var i = 0; i < recurCount; i++) {
+					console.log("Iter: " + i);
+					outPut(randomFunc(options), containerVolume, use_engine);
+				}
+				writeResult();
+			}
+
 
 		});
 
@@ -260,6 +324,18 @@
 	};
 	
 	render = function() {
+		var timer = Date.now() * 0.0006;
+
+		camera.position.x = Math.cos( timer ) * 650;
+		//camera.position.y = Math.sin( timer ) * 200;
+		// // camera.position.y = 0;
+		camera.position.z = Math.sin( timer ) * 650;
+		//camera.position.x = 800;
+		//camera.position.z = 800;
+
+		//camera.lookAt( scene.position );
+		camera.lookAt({x: 75, y: 75, z: 75});
+
 		requestAnimationFrame( render );
 		renderer.render( scene, camera );
 		render_stats.update();

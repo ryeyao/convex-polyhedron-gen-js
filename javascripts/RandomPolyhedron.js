@@ -263,7 +263,10 @@ function randomPointInCylinder(cylinder) {
     x = radius * Math.cos(gama);
     z = radius * Math.sin(gama);
     y = randomBetween(0, cylinder.parameters.height);
-    return new THREE.Vector3(x, y, z);
+
+    var point = new THREE.Vector3(x, y, z);
+    movePoint3ByVector(point, cylinder.center_bottom);
+    return point;
 }
 
 function randomBetween(min, max) {
@@ -289,6 +292,7 @@ function randomSphereInBox(minR, maxR, box) {
 function randomSphereInCylinder(minR, maxR, cylinder) {
     var radius = randomBetween(minR, maxR);
     var innerCylinder = new THREE.CylinderGeometry(cylinder.parameters.radiusTop - radius, cylinder.parameters.radiusBottom - radius, cylinder.parameters.height - radius*2, 32);
+    innerCylinder.center_bottom = cylinder.center_bottom;
     var centre = randomPointInCylinder(innerCylinder);
     return {radius: radius, center: centre};
 }
@@ -321,7 +325,7 @@ function randomSphereNonIntersected(minR, maxR, container, randomSphereFunc) {
 
 }
 
-function randomConvexNonIntersected(minR, maxR, minVertices, maxVertices, container, randomSphereFunc, allpolyhedrons) {
+function randomConvexNonIntersected(minR, maxR, minSlenderness, maxSlenderness, container, randomSphereFunc, allpolyhedrons) {
     // make container geometry
 
     var polyhedrons = [];
@@ -331,7 +335,7 @@ function randomConvexNonIntersected(minR, maxR, minVertices, maxVertices, contai
     var len_old = 0;
     var intersectionCount = 0;
     var MAX_ITER_COUNT = 1;
-    var MAX_TRY_COUNT = 20;
+    var MAX_TRY_COUNT = 1;
 
     return function() {
         for (var i = 0; i < MAX_ITER_COUNT; i++) {
@@ -348,13 +352,19 @@ function randomConvexNonIntersected(minR, maxR, minVertices, maxVertices, contai
                         convex.vertices.push(randomPointInSphere(sphere));
                         convex = new THREE.ConvexGeometry(convex.vertices);
                     }
+
+                }
+                if (convex.slendernessRatio < minSlenderness || convex.slendernessRatio > maxSlenderness) {
+                    // ignore it
+                    needRegenerate = true;
+                    continue;
                 }
                 convex.edges = extractEdges(convex.faces, 3);
 
                 if (polyhedrons.length > 0 && hasIntersection(polyhedrons, convex, areIntersectedPolyhedrons)) {
 
                     // intersection happens
-                    switch (THREE.Math.randInt(1, 2, 3)) {
+                    switch (THREE.Math.randInt(1, 3)) {
                         case 1:
                             // try scale the sphere
                             sphere.radius *= randomBetween(0.6, 0.9);
@@ -390,10 +400,20 @@ function randomConvexNonIntersected(minR, maxR, minVertices, maxVertices, contai
 
                             matrix = new THREE.Matrix4().makeTranslation(xt, yt, zt);
                             convex.applyMatrix(matrix);
-                            if (isPolyhedronOutOfBox(container, convex)) {
-                                needRegenerate = true;
+                            if (container.vertex3A == undefined) {
+
+                                if (isPolyhedronOutOfCylinder(container, convex)) {
+                                    needRegenerate = true;
+                                } else {
+                                    needRegenerate = false;
+                                }
                             } else {
-                                needRegenerate = false;
+
+                                if (isPolyhedronOutOfBox(container, convex)) {
+                                    needRegenerate = true;
+                                } else {
+                                    needRegenerate = false;
+                                }
                             }
                             break;
 
@@ -576,10 +596,14 @@ function getBaseTetrahedronInSphere(sphere) {
     return tetrahedron;
 }
 
-function randomGenAndPut(options) {
+function randomGenAndPutForCylinder(options) {
     var minR = options.polyhedron.radius.min,
         maxR = options.polyhedron.radius.max;
+    var minSlenderness = options.polyhedron.slenderness_ratio.min,
+        maxSlenderness = options.polyhedron.slenderness_ratio.max;
     var edge_len = options.container.options.edge_len;
+    var radius = options.container.options.radius,
+        height = options.container.options.height;
     var minVertices = 4, maxVertices = 4;
 
     var polys = [];
@@ -591,7 +615,7 @@ function randomGenAndPut(options) {
     };
     var boxVolume = calcVolumeOfBox(box);
 
-    var cylinder_geometry = new THREE.CylinderGeometry(75, 75, 150, 32);
+    var cylinder_geometry = new THREE.CylinderGeometry(radius, radius, height, 36);
     var cylinder = new THREE.Mesh(cylinder_geometry);
     var cylinderVolume = calcVolumeOfCylinder(cylinder_geometry);
     // scene.add(cylinder);
@@ -606,11 +630,120 @@ function randomGenAndPut(options) {
 
     // var randomSphere = randomSphereNonIntersected(minR, maxR, cylinder_geometry, randomSphereInCylinder);
     // var randomSphere = randomSphereNonIntersected(minR, maxR, box, randomSphereInBox);
-    var randomConvex = randomConvexNonIntersected(minR, maxR, minVertices, maxVertices, container, randomSphereInBox, allConvex);
+    var randomConvex = randomConvexNonIntersected(minR, maxR, minSlenderness, maxSlenderness, container, randomSphereInCylinder, allConvex);
 
 
     // Generate polyhedrons forever
     for (var i = 0; i < 1000; i++) {
+        // console.log("IterCount: " + (i + 1));
+
+        // while(true) {
+        var materials = [
+            new THREE.MeshLambertMaterial({ambient: Math.random() * 16777215}),
+            new THREE.MeshBasicMaterial({color: Math.random() * 16777215, wireframe: true, transparent: true, opacity: 1})
+        ];
+
+        // var sphere;
+        // sphere = randomSphere();
+        // if (sphere == undefined) continue;
+        // if (sphere == "Overflow") {
+        //     return;
+        // }
+        // if (sphere == undefined) continue;
+        // var convex = randomConvexInSphere(minVertices, maxVertices, sphere);
+
+
+        var convex = randomConvex();
+        if (convex == undefined) continue;
+        var volume = calculate(convex);
+        if (volume < 20) continue;
+        totalVolume += volume;
+        rate = (totalVolume / containerVolume) * 100;
+        // console.log("Vertices: " + JSON.stringify(convex.vertices));
+        // console.log("Current: " + volume);
+        // console.log("Total: " + totalVolume);
+        // console.log("containerVolume: " + containerVolume);
+        //console.log("Rate: " + rate);
+        var object = THREE.SceneUtils.createMultiMaterialObject(convex, materials);
+        polys.push(convex);
+        allConvex.push(convex);
+        // object.position.set(sphere.center.x, sphere.center.y, sphere.center.z);
+        // object.position.set(convex.boundingSphere.center);
+        // object.position.set(convex.boundingSphere.center.x, convex.boundingSphere.center.y, convex.boundingSphere.center.z)
+        //scene.add(object);
+        //box.objects.push(object);
+        if (rate > 30) ;
+        // setTimeout(randomGenAndPut);
+
+    }
+
+    // console.log("Box V: " + boxVolume);
+
+    // return box;
+    return polys;
+}
+function randomGenAndPut(options) {
+    var minR = options.polyhedron.radius.min,
+        maxR = options.polyhedron.radius.max;
+    var minSlenderness = options.polyhedron.slenderness_ratio.min,
+        maxSlenderness = options.polyhedron.slenderness_ratio.max;
+    var edge_len = options.container.options.edge_len;
+    var radius = options.container.options.radius,
+        height = options.container.options.height;
+    var type = options.container.type;
+    var random_tier_count = options.random_iter_count;
+
+
+
+    var minVertices = 4, maxVertices = 4;
+
+    var polys = [];
+
+    var box = {
+        vertex3A: new THREE.Vector3(0, 0, 0),
+        vertex3B: new THREE.Vector3(edge_len, edge_len, edge_len),
+        objects: []
+    };
+    var boxVolume = calcVolumeOfBox(box);
+
+    var cylinder_geometry = new THREE.CylinderGeometry(radius, radius, height, 36);
+    var cylinder = new THREE.Mesh(cylinder_geometry);
+    var cylinderVolume = calcVolumeOfCylinder(cylinder_geometry);
+
+    var container;
+    var randomConvex;
+    var containerVolume;
+    if (type == "cylinder") {
+        container = cylinder_geometry;
+        containerVolume = cylinderVolume;;
+
+        var box_origin = (1 - Math.sqrt(2)/2) * radius;
+        var box_height = height;
+        var box_len = Math.sqrt(2) * radius;
+        var box_inner = {
+            vertex3A: new THREE.Vector3(box_origin, 0, box_origin),
+            vertex3B: new THREE.Vector3(box_origin + box_len, box_height, box_origin + box_len),
+            randomFunc: function(){}
+        };
+        container.center_bottom = new THREE.Vector3(radius, 0, radius);
+        randomConvex = randomConvexNonIntersected(minR, maxR, minSlenderness, maxSlenderness, container, randomSphereInCylinder, allConvex);
+    } else {
+        container = box;
+        containerVolume = boxVolume;
+        randomConvex = randomConvexNonIntersected(minR, maxR, minSlenderness, maxSlenderness, container, randomSphereInBox, allConvex);
+    }
+
+    //moveBox(box, 100, 100, 100);
+
+
+    // Randomly generate outbound sphere for the convex polyhedron to be generated
+
+    // var randomSphere = randomSphereNonIntersected(minR, maxR, cylinder_geometry, randomSphereInCylinder);
+    // var randomSphere = randomSphereNonIntersected(minR, maxR, box, randomSphereInBox);
+
+
+    // Generate polyhedrons forever
+    for (var i = 0; i < random_tier_count; i++) {
         // console.log("IterCount: " + (i + 1));
 
     // while(true) {
@@ -639,7 +772,7 @@ function randomGenAndPut(options) {
         // console.log("Current: " + volume);
         // console.log("Total: " + totalVolume);
         // console.log("containerVolume: " + containerVolume);
-        //console.log("Rate: " + rate);
+        console.log("Rate: " + rate);
         var object = THREE.SceneUtils.createMultiMaterialObject(convex, materials);
         polys.push(convex);
         allConvex.push(convex);
@@ -1446,7 +1579,8 @@ function initBoxScene(options) {
         bumper_geom = new THREE.BoxGeometry(thickness, edge_len + thickness*2, edge_len + thickness*2);
 
     // Back left
-    bumper = new Physijs.BoxMesh( bumper_geom, ground_material, 0, { restitution: .2 } );
+    //bumper = new Physijs.BoxMesh( bumper_geom, ground_material, 0, { restitution: .2 } );
+    bumper = new Physijs.BoxMesh( bumper_geom, wall_material, 0, { restitution: .2 } );
     bumper.position.y = edge_len/2;
     bumper.position.x = -Math.ceil(thickness/2);
     bumper.position.z = edge_len/2;
@@ -1465,6 +1599,7 @@ function initBoxScene(options) {
 
     // Back right
     bumper = new Physijs.BoxMesh( bumper_geom, ground_material, 0, { restitution: .2 } );
+    bumper = new Physijs.BoxMesh( bumper_geom, wall_material, 0, { restitution: .2 } );
     bumper.position.y = edge_len/2;
     bumper.position.x = edge_len/2;
     bumper.position.z = -Math.ceil(thickness/2);
@@ -1502,6 +1637,9 @@ function randomGenAndPutInSubBox3(options) {
         maxR = options.polyhedron.radius.max;
     var minVertices = 4, maxVertices = 4;
 
+    var minSlenderness = options.polyhedron.slenderness_ratio.min,
+        maxSlenderness = options.polyhedron.slenderness_ratio.max;
+
     var box = {
         vertex3A: new THREE.Vector3(0, 0, 0),
         vertex3B: new THREE.Vector3(edge_len, edge_len, edge_len),
@@ -1517,57 +1655,93 @@ function randomGenAndPutInSubBox3(options) {
 
 
     // Randomly generate outbound sphere for the convex polyhedron to be generated
-    var subBoxes = [];
     var randomFuncs = [];
-    var subStep = 30;
+    var subStep = Math.ceil(edge_len / randomBetween(minR * 2, maxR));
     var interectionCount = 0;
-    var randomize = false;
+    var randomize = true;
     var polys = [];
 
 
-    // Iter through sub boxes
-    var xitercount = Math.floor((container.vertex3B.x - container.vertex3A.x) / subStep),
-        yitercount = Math.floor((container.vertex3B.y - container.vertex3A.y) / subStep),
-        zitercount = Math.floor((container.vertex3B.z - container.vertex3A.z) / subStep);
 
-    for (var i = 0; i < xitercount; i++) {
+    function splitBox(container, subStep) {
+        var spolys = [];
+        var c_edge_len = container.vertex3B.x - container.vertex3A.x;
 
-        for (var j = 0; j < yitercount; j++) {
+        if (c_edge_len <= Math.floor(minR)) {
+            return spolys;
+        }
+        //var subBoxes = [];
+        // Iter through sub boxes
 
-            for (var k = 0; k < zitercount; k++) {
+        var xitercount = Math.floor((container.vertex3B.x - container.vertex3A.x) / subStep),
+            yitercount = Math.floor((container.vertex3B.y - container.vertex3A.y) / subStep),
+            zitercount = Math.floor((container.vertex3B.z - container.vertex3A.z) / subStep);
 
-                var sub = {
-                    vertex3A: new THREE.Vector3(container.vertex3A.x + i * subStep, container.vertex3A.y + j * subStep, container.vertex3A.z + k * subStep),
-                    vertex3B: new THREE.Vector3(container.vertex3A.x + (i + 1) * subStep, container.vertex3A.y + (j + 1) * subStep, container.vertex3A.z + (k + 1) * subStep)
-                };
+        for (var i = 0; i < xitercount; i++) {
 
-                //randomFuncs.push(randomConvexNonIntersected(minR, maxR, minVertices, maxVertices, sub, randomSphereInBox));
-                subBoxes.push(sub);
-                //
-                switch (THREE.Math.randInt(0, 6)) {
-                //switch ((i * k * j) % 3) {
-                    case 0:
-                        polys.push.apply(polys, splitBoxTo5Tetrahedrons(sub));
-                        break;
-                    case 1:
-                        polys.push.apply(polys, splitBoxTo28Tetrahedrons(sub));
-                        break;
-                    case 2:
-                        polys.push.apply(polys, splitBoxTo4Hexahedron(sub));
-                        break;
-                    default :
-                        break;
+            for (var j = 0; j < yitercount; j++) {
 
+                for (var k = 0; k < zitercount; k++) {
+
+                    var sub = {
+                        vertex3A: new THREE.Vector3(container.vertex3A.x + i * subStep, container.vertex3A.y + j * subStep, container.vertex3A.z + k * subStep),
+                        vertex3B: new THREE.Vector3(container.vertex3A.x + (i + 1) * subStep, container.vertex3A.y + (j + 1) * subStep, container.vertex3A.z + (k + 1) * subStep)
+                    };
+                    var sub_edge_len = sub.vertex3B.x - sub.vertex3A.x;
+
+                    //randomFuncs.push(randomConvexNonIntersected(minR, maxR, minVertices, maxVertices, sub, randomSphereInBox));
+                    //subBoxes.push(sub);
+                    //
+                    switch (THREE.Math.randInt(0, 5)) {
+                        //switch ((i * k * j) % 3) {
+                        case 0:
+                            //if (sub_edge_len > Math.ceil(maxR)) {
+                            //    spolys.push.apply(spolys, splitBox(sub, subStep));
+                            //
+                            //} else {
+                                spolys.push.apply(spolys, splitBoxTo5Tetrahedrons(sub));
+                            //}
+                            break;
+                        case 1:
+                            //if (sub_edge_len > Math.ceil(maxR)) {
+                            //    spolys.push.apply(spolys, splitBox(sub, subStep));
+                            //
+                            //} else {
+                                spolys.push.apply(spolys, splitBoxTo28Tetrahedrons(sub));
+                            //}
+                            break;
+                        case 2:
+                            //if (sub_edge_len > Math.ceil(maxR)) {
+                            //    spolys.push.apply(spolys, splitBox(sub, subStep));
+                            //
+                            //} else {
+                                spolys.push.apply(spolys, splitBoxTo4Hexahedron(sub));
+                            //}
+                            break;
+                        default :
+                            break;
+
+                    }
                 }
             }
         }
+
+        return spolys;
     }
+    polys.push.apply(polys, splitBox(container, subStep));
 
 
         // Randomize all convexs
         for (var i = 0; i < polys.length; i++) {
 
             var curr = polys[i];
+
+            if (curr.slendernessRatio < minSlenderness || curr.slendernessRatio > maxSlenderness) {
+                // remove it
+                polys.splice(i, 1);
+                i--;
+                continue;
+            }
 
             // Compute sphere
             curr.computeBoundingSphere();
@@ -1583,9 +1757,9 @@ function randomGenAndPutInSubBox3(options) {
                 curr.applyMatrix(matrix);
 
                 // scale
-                var x = randomBetween(0.5, 1);
-                var y = randomBetween(0.5, 1);
-                var z = randomBetween(0.5, 1);
+                var x = randomBetween(0.8, 1);
+                var y = randomBetween(0.8, 1);
+                var z = randomBetween(0.8, 1);
 
                 //y = x, z = x;
 
@@ -1639,7 +1813,7 @@ function randomGenAndPutInSubBox3(options) {
                 var success = false;
                 var choice = THREE.Math.randInt(1, 2);
                 if (!randomize) {
-                    choice = 2;
+                    choice = 3;
                 }
                 switch (choice) {
                     case 1:
@@ -1661,25 +1835,25 @@ function randomGenAndPutInSubBox3(options) {
                             .makeTranslation(originX, originY, originZ);
                         curr.applyMatrix(matrix);
 
-                        //if (hasIntersection(allConvex, curr, areIntersectedPolyhedrons)) {
-                        //    console.log("Intersection count : " + (++interectionCount));
-                        //    euler = new THREE.Euler(-xa, -xb, -xc, 'ZYX');
-                        //
-                        //    matrix = new THREE.Matrix4()
-                        //        .makeTranslation(-originX, -originY, -originZ);
-                        //    curr.applyMatrix(matrix);
-                        //
-                        //    matrix = new THREE.Matrix4()
-                        //        .makeRotationFromEuler(euler)
-                        //    curr.applyMatrix(matrix);
-                        //
-                        //    matrix = new THREE.Matrix4()
-                        //        .makeTranslation(originX, originY, originZ);
-                        //    curr.applyMatrix(matrix);
-                        //    continue;
-                        //} else {
-                        //    success = true;
-                        //}
+                        if (hasIntersection(allConvex, curr, areIntersectedPolyhedrons)) {
+                            console.log("Intersection count : " + (++interectionCount));
+                            euler = new THREE.Euler(-xa, -xb, -xc, 'ZYX');
+
+                            matrix = new THREE.Matrix4()
+                                .makeTranslation(-originX, -originY, -originZ);
+                            curr.applyMatrix(matrix);
+
+                            matrix = new THREE.Matrix4()
+                                .makeRotationFromEuler(euler)
+                            curr.applyMatrix(matrix);
+
+                            matrix = new THREE.Matrix4()
+                                .makeTranslation(originX, originY, originZ);
+                            curr.applyMatrix(matrix);
+                            continue;
+                        } else {
+                            success = true;
+                        }
                         break;
 
                     case 2:
@@ -1718,85 +1892,13 @@ function randomGenAndPutInSubBox3(options) {
     allConvex.push.apply(allConvex, polys);
     return polys;
 
-    //// Output
-    //for (var i = 0; i < allConvex.length; i++) {
-    //
-    //    var materials = [
-    //        new THREE.MeshLambertMaterial({ambient: Math.random() * 16777215}),
-    //        new THREE.MeshBasicMaterial({
-    //            color: Math.random() * 16777215,
-    //            wireframe: true,
-    //            transparent: true,
-    //            opacity: 1
-    //        })
-    //    ];
-    //
-    //
-    //    var convex = allConvex[i];
-    //    if (convex == undefined) continue;
-    //    var volume = calculate(convex);
-    //    //if (volume < 20) continue;
-    //    totalVolume += volume;
-    //    rate = (totalVolume / containerVolume) * 100
-    //    // console.log("Vertices: " + JSON.stringify(convex.vertices));
-    //    // console.log("Current: " + volume);
-    //    // console.log("Total: " + totalVolume);
-    //    // console.log("containerVolume: " + containerVolume);
-    //    //console.log("Intersection count : " +interectionCount);
-    //    //var object = THREE.SceneUtils.createMultiMaterialObject(convex, materials);
-    //    var shape = new Physijs.ConvexMesh(
-    //        allConvex[i],
-    //        materials[0]
-    //    );
-    //
-    //    //shape.addEventListener('collision', function(other_object, linear_velocity) {
-    //    //    var _vector = new THREE.Vector3;
-    //    //    _vector.set( 0, 0, 0 );
-    //    //    this.setAngularFactor( _vector );
-    //    //    this.setAngularVelocity( _vector );
-    //    //    this.setLinearFactor( _vector );
-    //    //    this.setLinearVelocity( _vector );
-    //    //});
-    //    scene.add(shape);
-    //}
-    //console.log("Rate: " + rate);
-    //
-    //var interval = 4000;
-    //var g = 60;
-    //setTimeout(function() {
-    //
-    //    scene.setGravity(new THREE.Vector3( 0, g, 0 ));
-    //    setTimeout(function() {
-    //        scene.setGravity(new THREE.Vector3( -g, 0, 0 ));
-    //        setTimeout(function() {
-    //            scene.setGravity(new THREE.Vector3(g, 0, 0));
-    //            setTimeout(function() {
-    //                scene.setGravity(new THREE.Vector3( 0, 0, -g ));
-    //                setTimeout(function() {
-    //                    scene.setGravity(new THREE.Vector3( 0, 0, g ));
-    //                }, interval);
-    //            }, interval);
-    //        }, interval);
-    //    }, interval);
-    //}, interval);
-
-
 }
 
-function outPut(polys, containerVolume) {
+function outPut(polys, containerVolume, use_engine) {
 
     // Output
     for (var i = 0; i < polys.length; i++) {
 
-        var materials = [
-            new THREE.MeshLambertMaterial({ambient: Math.random() * 16777215}),
-            new THREE.MeshBasicMaterial({
-                color: Math.random() * 16777215,
-                wireframe: true,
-                transparent: true,
-                opacity: 1
-            })
-        ];
 
 
         var convex = polys[i];
@@ -1811,20 +1913,33 @@ function outPut(polys, containerVolume) {
         // console.log("containerVolume: " + containerVolume);
         //console.log("Intersection count : " +interectionCount);
         //var object = THREE.SceneUtils.createMultiMaterialObject(convex, materials);
-        var shape = new Physijs.ConvexMesh(
-            polys[i],
-            materials[0]
-        );
+        if (use_engine) {
+            var materials = [
+                new THREE.MeshLambertMaterial({ambient: Math.random() * 16777215}),
+                new THREE.MeshBasicMaterial({
+                    color: Math.random() * 16777215,
+                    wireframe: true,
+                    transparent: true,
+                    opacity: 1
+                })
+            ];
+            var shape = new Physijs.ConvexMesh(
+                polys[i],
+                materials[0]
+            );
 
-        //shape.addEventListener('collision', function(other_object, linear_velocity) {
-        //    var _vector = new THREE.Vector3;
-        //    _vector.set( 0, 0, 0 );
-        //    this.setAngularFactor( _vector );
-        //    this.setAngularVelocity( _vector );
-        //    this.setLinearFactor( _vector );
-        //    this.setLinearVelocity( _vector );
-        //});
-        //scene.add(shape);
+            //shape.addEventListener('collision', function(other_object, linear_velocity) {
+            //    var _vector = new THREE.Vector3;
+            //    _vector.set( 0, 0, 0 );
+            //    this.setAngularFactor( _vector );
+            //    this.setAngularVelocity( _vector );
+            //    this.setLinearFactor( _vector );
+            //    this.setLinearVelocity( _vector );
+            //});
+
+            scene.add(shape);
+        }
+
     }
     console.log("Rate: " + rate);
 
@@ -1851,10 +1966,10 @@ function outPut(polys, containerVolume) {
 function initCylinderScene(options) {
 
     var radius = options.container.options.radius;
-    var height = options.container.options.height + 2;
+    var height = options.container.options.height;
     var path_dist = 0;
-    var thickness = 32;
-    var segments = 36;
+    var thickness = 1;
+    var segments = 360;
 
     // Ground
     ground = new Physijs.BoxMesh(
@@ -1889,7 +2004,7 @@ function initCylinderScene(options) {
     //var path = new THREE.LineCurve3( new THREE.Vector3(path_dist, 0, path_dist), new THREE.Vector3(path_dist, height, path_dist) );
 
     var bumper,
-        bumper_geom = new THREE.BoxGeometry(10, height + thickness, Math.PI * radius * radius / (segments*5));
+        bumper_geom = new THREE.BoxGeometry(1, height + thickness, Math.PI * radius * radius / (segments*5));
 
 
     // Wall
@@ -1903,8 +2018,8 @@ function initCylinderScene(options) {
         );
         var grad = 2 * i * Math.PI / segments;
         bumper.position.x = radius + thickness/2 + radius * Math.cos(grad);
-        bumper.position.y = radius;
-        bumper.position.z = radius + thickness/2 + radius * Math.sin(grad);
+        bumper.position.y = height/2;
+        bumper.position.z = radius + thicknexx/2 + radius * Math.sin(grad);
         bumper.rotation.y = -grad;
         scene.add(bumper);
     }
@@ -1912,7 +2027,7 @@ function initCylinderScene(options) {
     // Top
 
     bumper_geom = new THREE.CylinderGeometry(radius * 1.5, radius * 1.5, thickness, segments);
-    bumper = new Physijs.CylinderMesh( bumper_geom, ground_material, 0, { restitution: .2 } );
+    bumper = new Physijs.CylinderMesh( bumper_geom, wall_material, 0, { restitution: .2 } );
     bumper.position.y = height + thickness/2;
     bumper.position.x = radius;
     bumper.position.z = radius;
@@ -1924,31 +2039,15 @@ function initCylinderScene(options) {
 }
 function randomGenAndPutInCylinder(options) {
 
-    //var radius = options.container.options.radius;
-    //var height = options.container.options.height + 2;
-    //var path_dist = 0;
-    //var thickness = 11;
-    //var segments = 36;
-    //
-    //var cylinder_geometry = new THREE.CylinderGeometry(75, 75, 150, 32);
-    //var cylinder = new THREE.Mesh(cylinder_geometry);
-    //var cylinderVolume = calcVolumeOfCylinder(cylinder_geometry);
-    //
-    //var box_len = 1.414 * cylinder_geometry.parameters.radiusTop;
-    //var box_origin = (1 - Math.sqrt(2)/2) * cylinder_geometry.parameters.radiusTop;
-    //var box_height = cylinder_geometry.parameters.height;
-    //var box = {
-    //    vertex3A: new THREE.Vector3(box_origin, 0, box_origin),
-    //    vertex3B: new THREE.Vector3(box_len, box_height, box_len),
-    //    randomFunc: function(){}
-    //};
-
-
     var radius = options.container.options.radius;
     var height = options.container.options.height + 2;
     var path_dist = 0;
     var thickness = 11;
     var segments = 36;
+    var minSlenderness = options.polyhedron.slenderness_ratio.min,
+        maxSlenderness = options.polyhedron.slenderness_ratio.max;
+
+    var polys = [];
 
     var cylinder_geometry = new THREE.CylinderGeometry(radius, radius, height, segments);
     //var cylinder = new THREE.Mesh(cylinder_geometry);
@@ -1997,13 +2096,13 @@ function randomGenAndPutInCylinder(options) {
                 subBoxes.push(sub);
                 switch (THREE.Math.randInt(0, 2)) {
                     case 0:
-                        allConvex.push.apply(allConvex, splitBoxTo5Tetrahedrons(sub));
+                        polys.push.apply(polys, splitBoxTo5Tetrahedrons(sub));
                         break;
                     case 1:
-                        allConvex.push.apply(allConvex, splitBoxTo28Tetrahedrons(sub));
+                        polys.push.apply(polys, splitBoxTo28Tetrahedrons(sub));
                         break;
                     case 2:
-                        allConvex.push.apply(allConvex, splitBoxTo4Hexahedron(sub));
+                        polys.push.apply(polys, splitBoxTo4Hexahedron(sub));
                         break;
                     case 3:
                         break;
@@ -2014,9 +2113,15 @@ function randomGenAndPutInCylinder(options) {
     }
 
     // Randomize all convexs
-    for (var i = 0; i < allConvex.length; i++) {
+    for (var i = 0; i < polys.length; i++) {
 
-        var curr = allConvex[i];
+        var curr = polys[i];
+        if (curr.slendernessRatio < minSlenderness || curr.slendernessRatio > maxSlenderness) {
+            // remove it
+            polys.splice(i, 1);
+            i--;
+            continue;
+        }
 
         // Compute sphere
         curr.computeBoundingSphere();
@@ -2031,9 +2136,9 @@ function randomGenAndPutInCylinder(options) {
         curr.applyMatrix(matrix);
 
         // scale
-        var x = randomBetween(1, 1);
-        var y = randomBetween(1, 1);
-        var z = randomBetween(1, 1);
+        var x = randomBetween(0.9, 1);
+        var y = randomBetween(0.9, 1);
+        var z = randomBetween(0.9, 1);
 
         //y = x, z = x;
 
@@ -2071,20 +2176,20 @@ function randomGenAndPutInCylinder(options) {
 
     var ITER_COUNT = 100;
 
-    for (var i = 0; i < allConvex.length; i++) {
+    for (var i = 0; i < polys.length; i++) {
 
         //var curr = allConvex[i].clone();
-        var curr = allConvex[i];
-        curr.edges = allConvex[i].edges;
+        var curr = polys[i];
+        curr.edges = polys[i].edges;
 
-        var sphere = allConvex[i].boundingSphere;
+        var sphere = polys[i].boundingSphere;
         var originX = sphere.center.x,
             originY = sphere.center.y,
             originZ = sphere.center.z;
         for (var j = 0; j < ITER_COUNT; j++) {
             // intersection happens
             var success = false;
-            switch (THREE.Math.randInt(1, 2)) {
+            switch (THREE.Math.randInt(0, 0)) {
                 case 1:
                     // try rotate the convex
                     var xa = randomBetween(-15, 15),
@@ -2158,52 +2263,55 @@ function randomGenAndPutInCylinder(options) {
 
     }
 
-    // Output
-    for (var i = 0; i < allConvex.length; i++) {
+    allConvex.push.apply(allConvex, polys);
+    return polys;
 
-        var materials = [
-            new THREE.MeshLambertMaterial({ambient: Math.random() * 16777215}),
-            new THREE.MeshBasicMaterial({
-                color: Math.random() * 16777215,
-                wireframe: true,
-                transparent: true,
-                opacity: 1
-            })
-        ];
-
-
-        var convex = allConvex[i];
-        if (convex == undefined) continue;
-        var volume = calculate(convex);
-        //if (volume < 20) continue;
-        totalVolume += volume;
-        rate = (totalVolume / containerVolume) * 100
-        // console.log("Vertices: " + JSON.stringify(convex.vertices));
-        // console.log("Current: " + volume);
-        // console.log("Total: " + totalVolume);
-        // console.log("containerVolume: " + containerVolume);
-        //console.log("Rate: " + rate);
-        //console.log("Intersection count : " +interectionCount);
-        //var object = THREE.SceneUtils.createMultiMaterialObject(convex, materials);
-        var shape = new Physijs.ConvexMesh(
-            allConvex[i],
-            materials[0]
-        );
-
-        //shape.addEventListener('collision', function(other_object, linear_velocity) {
-        //    var _vector = new THREE.Vector3;
-        //    _vector.set( 0, 0, 0 );
-        //    this.setAngularFactor( _vector );
-        //    this.setAngularVelocity( _vector );
-        //    this.setLinearFactor( _vector );
-        //    this.setLinearVelocity( _vector );
-        //});
-        scene.add(shape);
-        console.log("Rate: " + rate);
-    }
-
-    var interval = 4000;
-    var g = 60;
+    //// Output
+    //for (var i = 0; i < allConvex.length; i++) {
+    //
+    //    var materials = [
+    //        new THREE.MeshLambertMaterial({ambient: Math.random() * 16777215}),
+    //        new THREE.MeshBasicMaterial({
+    //            color: Math.random() * 16777215,
+    //            wireframe: true,
+    //            transparent: true,
+    //            opacity: 1
+    //        })
+    //    ];
+    //
+    //
+    //    var convex = allConvex[i];
+    //    if (convex == undefined) continue;
+    //    var volume = calculate(convex);
+    //    //if (volume < 20) continue;
+    //    totalVolume += volume;
+    //    rate = (totalVolume / containerVolume) * 100
+    //    // console.log("Vertices: " + JSON.stringify(convex.vertices));
+    //    // console.log("Current: " + volume);
+    //    // console.log("Total: " + totalVolume);
+    //    // console.log("containerVolume: " + containerVolume);
+    //    //console.log("Rate: " + rate);
+    //    //console.log("Intersection count : " +interectionCount);
+    //    //var object = THREE.SceneUtils.createMultiMaterialObject(convex, materials);
+    //    var shape = new Physijs.ConvexMesh(
+    //        allConvex[i],
+    //        materials[0]
+    //    );
+    //
+    //    //shape.addEventListener('collision', function(other_object, linear_velocity) {
+    //    //    var _vector = new THREE.Vector3;
+    //    //    _vector.set( 0, 0, 0 );
+    //    //    this.setAngularFactor( _vector );
+    //    //    this.setAngularVelocity( _vector );
+    //    //    this.setLinearFactor( _vector );
+    //    //    this.setLinearVelocity( _vector );
+    //    //});
+    //    scene.add(shape);
+    //    console.log("Rate: " + rate);
+    //}
+    //
+    //var interval = 4000;
+    //var g = 60;
     //setTimeout(function() {
     //
     //    scene.setGravity(new THREE.Vector3( 0, g, 0 ));

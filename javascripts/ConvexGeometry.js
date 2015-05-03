@@ -23,11 +23,28 @@ THREE.ConvexGeometry = function (vertices) {
 
     var faces = [[0, 1, 2], [0, 2, 1]];
 
+    var max = Number.MIN_VALUE,
+        min = Number.MAX_VALUE;
+
     for (var i = 3; i < vertices.length; i++) {
 
-        addPoint(i);
+        if (addPoint(i)) {
+            for (var j = 0; j < i; j++) {
+                var dist = vertices[i].distanceTo(vertices[j]);
+                if (dist < min) {
+                    min = dist;
+                }
+
+                if (dist > max) {
+                    max = dist;
+                }
+            }
+        }
+
 
     }
+
+    this.slendernessRatio = max / min;
 
 
     function addPoint(vertexId) {
@@ -40,6 +57,7 @@ THREE.ConvexGeometry = function (vertices) {
         vertex.z += mag * randomOffset();
 
         var hole = [];
+        var added = false;
 
         for (var f = 0; f < faces.length;) {
 
@@ -80,6 +98,8 @@ THREE.ConvexGeometry = function (vertices) {
                 faces[f] = faces[faces.length - 1];
                 faces.pop();
 
+                added = true;
+
             } else { // not visible
 
                 f++;
@@ -97,6 +117,8 @@ THREE.ConvexGeometry = function (vertices) {
             ]);
 
         }
+
+        return added;
     }
 
     /**

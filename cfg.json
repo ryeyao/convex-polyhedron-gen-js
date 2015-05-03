@@ -1,6 +1,6 @@
 {
   "container": {
-    "type": "box",
+    "type": "cube",
     "options": {
       "height": 150,
       "radius": 75,
@@ -11,19 +11,27 @@
   "polyhedron": {
     "radius": {
       "min": 10,
-      "max": 20
+      "max": 40
     },
     "sharpness": {
       "min": 10,
       "max": 20
     },
     "slenderness_ratio": {
-      "min": 90,
-      "max": 100
+      "min": 1,
+      "max": 10
     }
   },
 
-  "show_window": false
+  "show_window": true,
+  "random_iter_count": 10000,
+
+  "high_volume_ratio": false,
+
+  "enable_simulation": true,
+  "simulation_interval": 100000,
+  "simulation_iter_count": 50
+
 
 
 }

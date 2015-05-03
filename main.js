@@ -15,7 +15,21 @@ app.on('window-all-closed', function() {
 var fs = require('fs');
 var ipc = require('ipc');
 app.on('ready', function() {
-  mainWindow = new BrowserWindow({width: 1024, height: 768, center: true, resizable: false, show: true});
+// parse options
+//ipc.on('options', function(event, msg) {
+//
+//  console.log(msg);
+//  var cft_path = process.argv[2];
+//  var content = fs.readFileSync(cft_path);
+//  console.log(JSON.parse(content));
+//  event.sender.send("options", content);
+//});
+//  var cft_path = process.argv[2];
+  var cft_path = "cfg.json";
+  var content = fs.readFileSync(cft_path);
+  var options = JSON.parse(content);
+
+  mainWindow = new BrowserWindow({width: 1024, height: 768, center: true, resizable: false, show: options.show_window});
   // and load the index.html of the app.
   mainWindow.loadUrl('file://' + __dirname + '/shapes.html');
 
@@ -39,14 +53,6 @@ ipc.on('synchronous-message', function(event, content) {
   event.returnValue = 'close';
 });
 
-ipc.on('options', function(event, msg) {
-
-  console.log(msg);
-  var cft_path = process.argv[2];
-  var content = fs.readFileSync(cft_path);
-  console.log(JSON.parse(content));
-  event.sender.send("options", content);
-});
 
 
 
