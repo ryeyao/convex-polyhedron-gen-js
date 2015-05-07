@@ -40,6 +40,15 @@ function movePoint3ByVector(point, deltaVector3) {
     movePoint3(point, deltaVector3.x, deltaVector3.y, deltaVector3.z);
 }
 
+function movePolyhedron(polyhedron, deltaX, deltaY, deltaZ) {
+    movePoints(polyhedron.vertices, deltaX, deltaY, deltaZ);
+}
+
+function movePolyhedronByVector(polyhedron, deltaVector3) {
+    movePolyhedron(polyhedron, deltaVector3.x, deltaVector3.y, deltaVector3.z);
+
+}
+
 function isPointOutOfBox(box, point) {
     if (point.x <= box.vertex3A.x) return true;
     if (point.y <= box.vertex3A.y) return true;
@@ -53,7 +62,8 @@ function isPointOutOfBox(box, point) {
 
 function isPointOutOfCylinder(cylinder, point) {
     var radius = cylinder.parameters.radiusTop;
-    if (point.distanceTo(new THREE.Vector3(radius, point.y, radius)) > radius) {
+    if (point.distanceTo(new THREE.Vector3(radius, point.y, radius)) > radius
+        || point.y < 0 || point.y > cylinder.parameters.height) {
         return true;
     }
     return false;
@@ -149,6 +159,13 @@ function extractEdges(pfaces, size) {
         return hole;
     }
 function areIntersectedPolyhedrons(polyhedronA, polyhedronB) {
+
+    // Check bounding sphere first
+    polyhedronA.computeBoundingSphere();
+    polyhedronB.computeBoundingSphere();
+    if (!areIntersectedSpheres(polyhedronA.boundingSphere, polyhedronB.boundingSphere)) {
+        return false;
+    }
 
     function whichSide(vertices, pointA, pointB) {
         // edge: (pointA, pointB)
@@ -284,7 +301,8 @@ function randomSphereInBox(minR, maxR, box) {
         vertex3A: new THREE.Vector3(box.vertex3A.x + radius, box.vertex3A.y + radius, box.vertex3A.z + radius),
         vertex3B: new THREE.Vector3(box.vertex3B.x - radius, box.vertex3B.y - radius, box.vertex3B.z - radius)
     };
-    var centre = randomPointInBox(innerBox);
+    //var centre = randomPointInBox(innerBox);
+    var centre = randomPointInBox(box);
 
     return {radius: radius, center: centre};
 }
@@ -293,7 +311,8 @@ function randomSphereInCylinder(minR, maxR, cylinder) {
     var radius = randomBetween(minR, maxR);
     var innerCylinder = new THREE.CylinderGeometry(cylinder.parameters.radiusTop - radius, cylinder.parameters.radiusBottom - radius, cylinder.parameters.height - radius*2, 32);
     innerCylinder.center_bottom = cylinder.center_bottom;
-    var centre = randomPointInCylinder(innerCylinder);
+    //var centre = randomPointInCylinder(innerCylinder);
+    var centre = randomPointInCylinder(cylinder);
     return {radius: radius, center: centre};
 }
 
@@ -336,6 +355,7 @@ function randomConvexNonIntersected(minR, maxR, minSlenderness, maxSlenderness, 
     var intersectionCount = 0;
     var MAX_ITER_COUNT = 1;
     var MAX_TRY_COUNT = 1;
+    var min_scale = minR/maxR;
 
     return function() {
         for (var i = 0; i < MAX_ITER_COUNT; i++) {
@@ -367,7 +387,7 @@ function randomConvexNonIntersected(minR, maxR, minSlenderness, maxSlenderness, 
                     switch (THREE.Math.randInt(1, 3)) {
                         case 1:
                             // try scale the sphere
-                            sphere.radius *= randomBetween(0.6, 0.9);
+                            sphere.radius *= randomBetween(min_scale, 0.9);
                             needRegenerate = true;
                             break;
 
@@ -446,6 +466,9 @@ function randomConvexNonIntersected(minR, maxR, minSlenderness, maxSlenderness, 
 
 function hasIntersection(shapes, shape, intersectFunc) {
     for (var i in shapes) {
+        if (shape == shapes[i]) {
+            return false;
+        }
         if (intersectFunc(shape, shapes[i])) {
             return true;
         }
@@ -593,6 +616,28 @@ function getBaseTetrahedronInSphere(sphere) {
 
     // var tetrahedron = new THREE.PolyhedronGeometry(vertices, faces);
     var tetrahedron = new THREE.ConvexGeometry(vertices);
+    // random rotation
+
+    var originX = sphere.center.x,
+        originY = sphere.center.y,
+        originZ = sphere.center.z;
+
+    var xa = randomBetween(-15, 15),
+        xb = randomBetween(-15, 15),
+        xc = randomBetween(-15, 15),
+        euler = new THREE.Euler(xa, xb, xc, 'XYZ'),
+
+        matrix = new THREE.Matrix4()
+            .makeTranslation(-originX, -originY, -originZ);
+    tetrahedron.applyMatrix(matrix);
+
+    matrix = new THREE.Matrix4()
+        .makeRotationFromEuler(euler)
+    tetrahedron.applyMatrix(matrix);
+
+    matrix = new THREE.Matrix4()
+        .makeTranslation(originX, originY, originZ);
+    tetrahedron.applyMatrix(matrix);
     return tetrahedron;
 }
 
@@ -710,6 +755,8 @@ function randomGenAndPut(options) {
     var cylinder = new THREE.Mesh(cylinder_geometry);
     var cylinderVolume = calcVolumeOfCylinder(cylinder_geometry);
 
+    var _totalVolume = 0, _rate = 0;
+
     var container;
     var randomConvex;
     var containerVolume;
@@ -766,13 +813,13 @@ function randomGenAndPut(options) {
         if (convex == undefined) continue;
         var volume = calculate(convex);
         if (volume < 20) continue;
-        totalVolume += volume;
-        rate = (totalVolume / containerVolume) * 100;
+        _totalVolume += volume;
+        _rate = (_totalVolume / containerVolume) * 100;
         // console.log("Vertices: " + JSON.stringify(convex.vertices));
         // console.log("Current: " + volume);
         // console.log("Total: " + totalVolume);
         // console.log("containerVolume: " + containerVolume);
-        console.log("Rate: " + rate);
+        console.log("_Rate: " + _rate);
         var object = THREE.SceneUtils.createMultiMaterialObject(convex, materials);
         polys.push(convex);
         allConvex.push(convex);
@@ -781,7 +828,7 @@ function randomGenAndPut(options) {
         // object.position.set(convex.boundingSphere.center.x, convex.boundingSphere.center.y, convex.boundingSphere.center.z)
         //scene.add(object);
         //box.objects.push(object);
-        if (rate > 30) ;
+        if (_rate > 30) ;
         // setTimeout(randomGenAndPut);
 
     }
@@ -1894,12 +1941,90 @@ function randomGenAndPutInSubBox3(options) {
 
 }
 
+function transform(polys, container, direction) {
+
+
+    var pointSortFunc = function(a, b) {
+        if (direction == "left") {
+            return a.x - b.x;
+        } else {
+            return a.y - b.y;
+        }
+    };
+    var polySortFunc = function(a, b) {
+        var pointsA = [];
+        for (var i = 0; i < a.vertices.length; i++) {
+            pointsA.push(a.vertices[i]);
+        }
+        pointsA.sort(pointSortFunc);
+        var pointsB = [];
+        for (var i = 0; i < b.vertices.length; i++) {
+            pointsB.push(b.vertices[i]);
+        }
+        pointsB.sort(pointSortFunc);
+
+        if (direction == "left") {
+            return pointsA[0].x - pointsB[0].x;
+        } else {
+            return pointsA[0].y - pointsB[0].y;
+        }
+    };
+
+    polys.sort(polySortFunc);
+
+    var min_step = -1;
+    var matrix, minus_matrix;
+    if (direction == "left") {
+        matrix = new THREE.Matrix4().makeTranslation(min_step, 0, 0);
+        minus_matrix = new THREE.Matrix4().makeTranslation(-min_step, 0, 0);
+    } else {
+        matrix = new THREE.Matrix4().makeTranslation(0, min_step, 0);
+        minus_matrix = new THREE.Matrix4().makeTranslation(0, -min_step, 0);
+    }
+    var iter_count = 1;
+
+    for (var iter = 0; iter < iter_count; iter++) {
+        //console.log("Transforming " + iter + " ...");
+        for (var i = 0; i < polys.length; i++) {
+
+            var convex = polys[i];
+            if (convex == undefined) continue;
+
+            var out = false, inter = false;
+            // Transform
+            while (!out && !inter) {
+                convex.applyMatrix(matrix);
+                //movePolyhedron(convex, 0, min_step, 0);
+
+                if (container.vertex3A == undefined) {
+                    out = isPolyhedronOutOfCylinder(container, convex)
+                } else {
+                    out = isPolyhedronOutOfBox(container, convex);
+                }
+                if (out) {
+                    convex.applyMatrix(minus_matrix);
+                    break;
+                }
+                inter = hasIntersection(allConvex, convex, areIntersectedPolyhedrons);
+                if (inter) {
+                    convex.applyMatrix(minus_matrix);
+                    //movePolyhedron(convex, 0, -min_step, 0);
+                    //console.log("Not Transformed " + iter + ": " + i);
+                    break;
+                }
+                console.log("Translated " + iter + ": " + i);
+
+            }
+        }
+    }
+
+    return polys;
+}
+
 function outPut(polys, containerVolume, use_engine) {
 
     // Output
     for (var i = 0; i < polys.length; i++) {
-
-
 
         var convex = polys[i];
         if (convex == undefined) continue;
@@ -1924,18 +2049,23 @@ function outPut(polys, containerVolume, use_engine) {
                 })
             ];
             var shape = new Physijs.ConvexMesh(
-                polys[i],
-                materials[0]
+                polys[i]
+                //materials[0]
             );
+            shape.setCcdMotionThreshold(1);
+            shape.setCcdSweptSphereRadius(0.2);
+            //shape.position.set(shape.geometry.position);
+            shape.__dirtyPosition = true;
+            shape.__dirtyRotation = true;
 
-            //shape.addEventListener('collision', function(other_object, linear_velocity) {
-            //    var _vector = new THREE.Vector3;
-            //    _vector.set( 0, 0, 0 );
-            //    this.setAngularFactor( _vector );
-            //    this.setAngularVelocity( _vector );
-            //    this.setLinearFactor( _vector );
-            //    this.setLinearVelocity( _vector );
-            //});
+            shape.addEventListener('collision', function(other_object, relative_velocity, relative_rotation, contact_normal) {
+                var _vector = new THREE.Vector3;
+                _vector.set( 0, 0, 0 );
+                //this.setAngularFactor( _vector );
+                //this.setAngularVelocity( _vector );
+                //this.setLinearFactor( _vector );
+                //this.setLinearVelocity( _vector );
+            });
 
             scene.add(shape);
         }
@@ -2019,7 +2149,7 @@ function initCylinderScene(options) {
         var grad = 2 * i * Math.PI / segments;
         bumper.position.x = radius + thickness/2 + radius * Math.cos(grad);
         bumper.position.y = height/2;
-        bumper.position.z = radius + thicknexx/2 + radius * Math.sin(grad);
+        bumper.position.z = radius + thickness/2 + radius * Math.sin(grad);
         bumper.rotation.y = -grad;
         scene.add(bumper);
     }
