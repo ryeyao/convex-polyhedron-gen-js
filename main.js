@@ -29,7 +29,8 @@ app.on('ready', function() {
   var content = fs.readFileSync(cft_path);
   var options = JSON.parse(content);
 
-  mainWindow = new BrowserWindow({width: 1024, height: 768, center: true, resizable: false, show: options.show_window});
+  //mainWindow = new BrowserWindow({width: 1024, height: 768, center: true, resizable: false, show: options.show_window});
+  mainWindow = new BrowserWindow({width: 1024, height: 768, center: true, resizable: false, show: false});
   // and load the index.html of the app.
   mainWindow.loadUrl('file://' + __dirname + '/shapes.html');
 
