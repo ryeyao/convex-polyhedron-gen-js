@@ -25,6 +25,7 @@
 
   "show_window": true,
   "random_iter_count": 10000,
+  "translate_iter_count": 5,
 
   "high_volume_ratio": false,
 

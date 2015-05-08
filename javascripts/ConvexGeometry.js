@@ -26,6 +26,13 @@ THREE.ConvexGeometry = function (vertices) {
     var max = Number.MIN_VALUE,
         min = Number.MAX_VALUE;
 
+    this.minX = Number.MAX_VALUE,
+    this.maxX = Number.MIN_VALUE,
+    this.minY = Number.MAX_VALUE,
+    this.maxY = Number.MIN_VALUE,
+    this.minZ = Number.MAX_VALUE,
+    this.maxZ = Number.MIN_VALUE;
+
     for (var i = 3; i < vertices.length; i++) {
 
         if (addPoint(i)) {
@@ -46,6 +53,20 @@ THREE.ConvexGeometry = function (vertices) {
 
     this.slendernessRatio = max / min;
 
+    this.computeMinMax = function () {
+
+        for (var i = 0; i < this.vertices.length; i++) {
+            var p = this.vertices[i];
+            if (p.x < this.minX) this.minX = p.x;
+            if (p.x > this.maxX) this.maxX = p.x;
+
+            if (p.y < this.minY) this.minY = p.y;
+            if (p.y > this.maxY) this.maxY = p.y;
+
+            if (p.z < this.minZ) this.minZ = p.z;
+            if (p.z > this.maxZ) this.maxZ = p.z;
+        }
+    };
 
     function addPoint(vertexId) {
 

@@ -131,16 +131,18 @@
 		readFile("../../cfg.json", function (options) {
 
 			var containerVolume = 0;
-			console.log(JSON.stringify(options));
+//			console.log(JSON.stringify(options));
 			options = JSON.parse(options);
 			var type = options.container.type;
 			var use_engine = false || options.enable_simulation;
 			var recurCount = options.simulation_iter_count;
+			var translate_iter_count = options.translate_iter_count;
 			var simulation_interval = options.simulation_interval;
 			var high_volume_ratio = options.high_volume_ratio;
 			var edge_len = options.container.options.edge_len;
 			var radius = options.container.options.radius;
 			var height = options.container.options.height;
+
 
 
 			// Disable
@@ -361,10 +363,11 @@
 			} else {
 
 				for (var i = 0; i < recurCount; i++) {
-					console.log("Iter: " + i);
+					console.log("Simulation iteration count: " + i);
 					outPut(randomFunc(options), containerVolume, use_engine);
-					transform(allConvex, container, "left");
-					transform(allConvex, container, "down");
+					translate(allConvex, container, "left", translate_iter_count);
+					translate(allConvex, container, "right", translate_iter_count);
+					translate(allConvex, container, "down", translate_iter_count);
 				}
 				writeResult();
 			}

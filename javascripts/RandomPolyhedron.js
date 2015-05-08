@@ -160,6 +160,16 @@ function extractEdges(pfaces, size) {
     }
 function areIntersectedPolyhedrons(polyhedronA, polyhedronB) {
 
+    //// Check distance
+    //polyhedronA.computeMinMax();
+    //polyhedronB.computeMinMax();
+    //
+    //if (polyhedronA.maxX < polyhedronB.minX || polyhedronA.minX > polyhedronB.maxX
+    //    || polyhedronA.maxY < polyhedronB.minY || polyhedronA.minY > polyhedronB.maxY
+    //    || polyhedronA.maxZ < polyhedronB.minZ || polyhedronA.minZ > polyhedronB.maxZ) {
+    //    return false;
+    //}
+
     // Check bounding sphere first
     polyhedronA.computeBoundingSphere();
     polyhedronB.computeBoundingSphere();
@@ -343,6 +353,258 @@ function randomSphereNonIntersected(minR, maxR, container, randomSphereFunc) {
     }
 
 }
+function scanConvexNonIntersected(minR, maxR, minSlenderness, maxSlenderness, container, randomSphereFunc, allpolyhedrons) {
+    // make container geometry
+
+    var polyhedrons = [];
+    if (allpolyhedrons != undefined) {
+        polyhedrons = allpolyhedrons;
+    }
+    var len_old = 0;
+    var intersectionCount = 0;
+    var MAX_ITER_COUNT = 1;
+    var MAX_TRY_COUNT = 5;
+    var min_scale = minR/maxR;
+
+    if (container.vertex3A == undefined) {
+
+        return function () {
+            for (var i = 0; i < MAX_ITER_COUNT; i++) {
+                var sphere = randomSphereFunc(minR, maxR, container);
+                // var convex = randomConvexInSphere(minVertices, maxVertices, sphere);
+                var convex;
+                var needRegenerate = true;
+                for (var j = 0; j < MAX_TRY_COUNT; j++) {
+
+
+                    if (needRegenerate) {
+                        convex = getBaseTetrahedronInSphere(sphere);
+                        if (randomBetween(0, 1) < 0.5) {
+                            convex.vertices.push(randomPointInSphere(sphere));
+                            convex = new THREE.ConvexGeometry(convex.vertices);
+                        }
+
+                    }
+                    if (convex.slendernessRatio < minSlenderness || convex.slendernessRatio > maxSlenderness) {
+                        // ignore it
+                        needRegenerate = true;
+                        continue;
+                    }
+                    convex.edges = extractEdges(convex.faces, 3);
+
+                    if (container.vertex3A == undefined) {
+                        if (isPolyhedronOutOfCylinder(container, convex)) {
+                            needRegenerate = true;
+                            continue;
+                        } else {
+                            needRegenerate = false;
+                        }
+                    } else {
+                        if (isPolyhedronOutOfBox(container, convex)) {
+                            needRegenerate = true;
+                            continue;
+                        } else {
+                            needRegenerate = false;
+                        }
+                    }
+
+                    if (polyhedrons.length > 0 && hasIntersection(polyhedrons, convex, areIntersectedPolyhedrons)) {
+
+                        // intersection happens
+                        switch (THREE.Math.randInt(1, 3)) {
+                            case 1:
+                                // try scale the sphere
+                                sphere.radius *= randomBetween(min_scale, sphere.radius);
+                                needRegenerate = true;
+                                break;
+
+                            case 2:
+                                // try rotate the convex
+                                var xa = randomBetween(0, 10),
+                                    xb = randomBetween(0, 10),
+                                    xc = randomBetween(0, 10),
+                                    euler = new THREE.Euler(xa, xb, xc, 'XYZ'),
+
+                                    matrix = new THREE.Matrix4()
+                                        .makeTranslation(-sphere.center.x, -sphere.center.y, -sphere.center.z);
+                                convex.applyMatrix(matrix);
+
+                                matrix = new THREE.Matrix4()
+                                    .makeRotationFromEuler(euler);
+                                convex.applyMatrix(matrix);
+
+                                matrix = new THREE.Matrix4()
+                                    .makeTranslation(sphere.center.x, sphere.center.y, sphere.center.z);
+                                convex.applyMatrix(matrix);
+                                needRegenerate = false;
+                                break;
+
+                            case 3:
+                                // try translate
+                                var xt = randomBetween(-10, 10),
+                                    yt = randomBetween(-10, 10),
+                                    zt = randomBetween(-10, 10),
+
+                                    matrix = new THREE.Matrix4().makeTranslation(xt, yt, zt);
+                                convex.applyMatrix(matrix);
+                                if (container.vertex3A == undefined) {
+
+                                    if (isPolyhedronOutOfCylinder(container, convex)) {
+                                        needRegenerate = true;
+                                    } else {
+                                        needRegenerate = false;
+                                    }
+                                } else {
+
+                                    if (isPolyhedronOutOfBox(container, convex)) {
+                                        needRegenerate = true;
+                                    } else {
+                                        needRegenerate = false;
+                                    }
+                                }
+                                break;
+
+                            default:
+                                break;
+                        }
+                        intersectionCount++;
+                        continue;
+                    } else {
+
+                    }
+
+                    // convex.boundingSphere = sphere;
+
+                    polyhedrons.push(convex);
+
+                    if (polyhedrons.length < len_old) {
+                        console.log('Stack Overflow. Terminated.');
+                        return "Overflow";
+                    }
+                    //console.log('Non-intersected polyhedrons: ' + polyhedrons.length);
+
+                    len_old = polyhedrons.length;
+                    return convex;
+                }
+
+            }
+        }
+    } else {
+        return function () {
+            var step = 5;
+            for (var l = 0; l < container.vertex3B.x; l+=step) {
+                for (var m = 0; m < container.vertex3B.y; m+=step) {
+                    for (var n = 0; n < container.vertex3B.z; n+=step) {
+                        console.log(l + ":" + m + ":" + n);
+                        var sphere = randomSphereFunc(minR, maxR, container);
+                        sphere.center.x = l;
+                        sphere.center.y = m;
+                        sphere.center.z = n;
+                        // var convex = randomConvexInSphere(minVertices, maxVertices, sphere);
+                        var convex;
+                        var needRegenerate = true;
+                        for (var j = 0; j < MAX_TRY_COUNT; j++) {
+
+
+                            if (needRegenerate) {
+                                convex = getBaseTetrahedronInSphere(sphere);
+                                if (randomBetween(0, 1) < 0.5) {
+                                    convex.vertices.push(randomPointInSphere(sphere));
+                                    convex = new THREE.ConvexGeometry(convex.vertices);
+                                }
+
+                            }
+                            if (convex.slendernessRatio < minSlenderness || convex.slendernessRatio > maxSlenderness) {
+                                // ignore it
+                                needRegenerate = true;
+                                continue;
+                            }
+                            convex.edges = extractEdges(convex.faces, 3);
+
+                            if (isPolyhedronOutOfBox(container, convex)) {
+                                needRegenerate = true;
+                                continue;
+                            } else {
+                                needRegenerate = false;
+                            }
+
+                            if (polyhedrons.length > 0 && hasIntersection(polyhedrons, convex, areIntersectedPolyhedrons)) {
+
+                                // intersection happens
+                                switch (THREE.Math.randInt(1, 3)) {
+                                    case 1:
+                                        // try scale the sphere
+                                        sphere.radius *= randomBetween(min_scale, sphere.radius);
+                                        needRegenerate = true;
+                                        break;
+
+                                    case 2:
+                                        // try rotate the convex
+                                        var xa = randomBetween(0, 10),
+                                            xb = randomBetween(0, 10),
+                                            xc = randomBetween(0, 10),
+                                            euler = new THREE.Euler(xa, xb, xc, 'XYZ'),
+
+                                            matrix = new THREE.Matrix4()
+                                                .makeTranslation(-sphere.center.x, -sphere.center.y, -sphere.center.z);
+                                        convex.applyMatrix(matrix);
+
+                                        matrix = new THREE.Matrix4()
+                                            .makeRotationFromEuler(euler);
+                                        convex.applyMatrix(matrix);
+
+                                        matrix = new THREE.Matrix4()
+                                            .makeTranslation(sphere.center.x, sphere.center.y, sphere.center.z);
+                                        convex.applyMatrix(matrix);
+                                        needRegenerate = false;
+                                        break;
+
+                                    case 3:
+                                        // try translate
+                                        var xt = randomBetween(-10, 10),
+                                            yt = randomBetween(-10, 10),
+                                            zt = randomBetween(-10, 10),
+
+                                            matrix = new THREE.Matrix4().makeTranslation(xt, yt, zt);
+                                        convex.applyMatrix(matrix);
+
+                                        if (isPolyhedronOutOfBox(container, convex)) {
+                                            needRegenerate = true;
+                                        } else {
+                                            needRegenerate = false;
+                                        }
+                                        break;
+
+                                    default:
+                                        break;
+                                }
+                                intersectionCount++;
+                                continue;
+                            } else {
+
+                            }
+
+                            // convex.boundingSphere = sphere;
+
+                            polyhedrons.push(convex);
+
+                            if (polyhedrons.length < len_old) {
+                                console.log('Stack Overflow. Terminated.');
+                                return "Overflow";
+                            }
+                            //console.log('Non-intersected polyhedrons: ' + polyhedrons.length);
+
+                            len_old = polyhedrons.length;
+                            //return convex;
+                            break;
+                        }
+
+                    }
+                }
+            }
+        }
+    }
+}
 
 function randomConvexNonIntersected(minR, maxR, minSlenderness, maxSlenderness, container, randomSphereFunc, allpolyhedrons) {
     // make container geometry
@@ -354,10 +616,10 @@ function randomConvexNonIntersected(minR, maxR, minSlenderness, maxSlenderness, 
     var len_old = 0;
     var intersectionCount = 0;
     var MAX_ITER_COUNT = 1;
-    var MAX_TRY_COUNT = 1;
+    var MAX_TRY_COUNT = 10;
     var min_scale = minR/maxR;
 
-    return function() {
+    return function () {
         for (var i = 0; i < MAX_ITER_COUNT; i++) {
             var sphere = randomSphereFunc(minR, maxR, container);
             // var convex = randomConvexInSphere(minVertices, maxVertices, sphere);
@@ -372,7 +634,6 @@ function randomConvexNonIntersected(minR, maxR, minSlenderness, maxSlenderness, 
                         convex.vertices.push(randomPointInSphere(sphere));
                         convex = new THREE.ConvexGeometry(convex.vertices);
                     }
-
                 }
                 if (convex.slendernessRatio < minSlenderness || convex.slendernessRatio > maxSlenderness) {
                     // ignore it
@@ -381,25 +642,41 @@ function randomConvexNonIntersected(minR, maxR, minSlenderness, maxSlenderness, 
                 }
                 convex.edges = extractEdges(convex.faces, 3);
 
+                if (container.vertex3A == undefined) {
+                    if (isPolyhedronOutOfCylinder(container, convex)) {
+                        needRegenerate = true;
+                        continue;
+                    } else {
+                        needRegenerate = false;
+                    }
+                } else {
+                    if (isPolyhedronOutOfBox(container, convex)) {
+                        needRegenerate = true;
+                        continue;
+                    } else {
+                        needRegenerate = false;
+                    }
+                }
+
                 if (polyhedrons.length > 0 && hasIntersection(polyhedrons, convex, areIntersectedPolyhedrons)) {
 
                     // intersection happens
                     switch (THREE.Math.randInt(1, 3)) {
                         case 1:
                             // try scale the sphere
-                            sphere.radius *= randomBetween(min_scale, 0.9);
+                            sphere.radius *= randomBetween(min_scale, sphere.radius);
                             needRegenerate = true;
                             break;
 
                         case 2:
                             // try rotate the convex
                             var xa = randomBetween(0, 10),
-                            xb = randomBetween(0, 10),
-                            xc = randomBetween(0, 10),
-                            euler = new THREE.Euler(xa, xb, xc, 'XYZ'),
+                                xb = randomBetween(0, 10),
+                                xc = randomBetween(0, 10),
+                                euler = new THREE.Euler(xa, xb, xc, 'XYZ'),
 
-                            matrix = new THREE.Matrix4()
-                                .makeTranslation(-sphere.center.x, -sphere.center.y, -sphere.center.z);
+                                matrix = new THREE.Matrix4()
+                                    .makeTranslation(-sphere.center.x, -sphere.center.y, -sphere.center.z);
                             convex.applyMatrix(matrix);
 
                             matrix = new THREE.Matrix4()
@@ -413,12 +690,12 @@ function randomConvexNonIntersected(minR, maxR, minSlenderness, maxSlenderness, 
                             break;
 
                         case 3:
-                            // try transform
+                            // try translate
                             var xt = randomBetween(-10, 10),
-                            yt = randomBetween(-10, 10),
-                            zt = randomBetween(-10, 10),
+                                yt = randomBetween(-10, 10),
+                                zt = randomBetween(-10, 10),
 
-                            matrix = new THREE.Matrix4().makeTranslation(xt, yt, zt);
+                                matrix = new THREE.Matrix4().makeTranslation(xt, yt, zt);
                             convex.applyMatrix(matrix);
                             if (container.vertex3A == undefined) {
 
@@ -442,10 +719,10 @@ function randomConvexNonIntersected(minR, maxR, minSlenderness, maxSlenderness, 
                     }
                     intersectionCount++;
                     continue;
-                }  else {
+                } else {
 
                 }
-                
+
                 // convex.boundingSphere = sphere;
 
                 polyhedrons.push(convex);
@@ -455,18 +732,18 @@ function randomConvexNonIntersected(minR, maxR, minSlenderness, maxSlenderness, 
                     return "Overflow";
                 }
                 //console.log('Non-intersected polyhedrons: ' + polyhedrons.length);
-                
+
                 len_old = polyhedrons.length;
                 return convex;
             }
-          
+
         }
     }
 }
 
 function hasIntersection(shapes, shape, intersectFunc) {
     for (var i in shapes) {
-        if (shape == shapes[i]) {
+        if (shape === shapes[i]) {
             return false;
         }
         if (intersectFunc(shape, shapes[i])) {
@@ -812,17 +1089,17 @@ function randomGenAndPut(options) {
         var convex = randomConvex();
         if (convex == undefined) continue;
         var volume = calculate(convex);
-        if (volume < 20) continue;
+        //if (volume < 20) continue;
         _totalVolume += volume;
         _rate = (_totalVolume / containerVolume) * 100;
         // console.log("Vertices: " + JSON.stringify(convex.vertices));
         // console.log("Current: " + volume);
         // console.log("Total: " + totalVolume);
         // console.log("containerVolume: " + containerVolume);
-        console.log("_Rate: " + _rate);
+        //console.log("_Rate: " + _rate);
         var object = THREE.SceneUtils.createMultiMaterialObject(convex, materials);
         polys.push(convex);
-        allConvex.push(convex);
+        //allConvex.push(convex);
         // object.position.set(sphere.center.x, sphere.center.y, sphere.center.z);
         // object.position.set(convex.boundingSphere.center);
         // object.position.set(convex.boundingSphere.center.x, convex.boundingSphere.center.y, convex.boundingSphere.center.z)
@@ -1524,7 +1801,7 @@ function randomGenAndPutInSubBox2() {
 
                 case 2:
                 case 3:
-                    // try transform
+                    // try translate
                     var xt = randomBetween(-15, 15),
                         yt = randomBetween(-15, 15),
                         zt = randomBetween(-15, 15),
@@ -1904,7 +2181,7 @@ function randomGenAndPutInSubBox3(options) {
                         break;
 
                     case 2:
-                        // try transform
+                        // try translate
                         var xt = randomBetween(-15, 15),
                             yt = randomBetween(-15, 15),
                             zt = randomBetween(-15, 15),
@@ -1941,14 +2218,19 @@ function randomGenAndPutInSubBox3(options) {
 
 }
 
-function transform(polys, container, direction) {
+function translate(polys, container, direction, iter_count) {
 
+    if (iter_count == undefined) {
+        iter_count = 1;
+    }
 
     var pointSortFunc = function(a, b) {
         if (direction == "left") {
             return a.x - b.x;
-        } else {
+        } else if (direction == "down") {
             return a.y - b.y;
+        } else if (direction == "right") {
+            return a.z - b.z;
         }
     };
     var polySortFunc = function(a, b) {
@@ -1965,9 +2247,18 @@ function transform(polys, container, direction) {
 
         if (direction == "left") {
             return pointsA[0].x - pointsB[0].x;
-        } else {
+        } else if (direction == "down") {
             return pointsA[0].y - pointsB[0].y;
+        } else if (direction == "right") {
+            return pointsA[0].z - pointsB[0].z;
         }
+        //if (direction == "left") {
+        //    return a.minX - b.minX;
+        //} else if (direction == "down") {
+        //    return a.minY - b.minY;
+        //} else if (direction == "right") {
+        //    return a.minZ - b.minZ;
+        //}
     };
 
     polys.sort(polySortFunc);
@@ -1977,14 +2268,17 @@ function transform(polys, container, direction) {
     if (direction == "left") {
         matrix = new THREE.Matrix4().makeTranslation(min_step, 0, 0);
         minus_matrix = new THREE.Matrix4().makeTranslation(-min_step, 0, 0);
-    } else {
+    } else if (direction == "down") {
         matrix = new THREE.Matrix4().makeTranslation(0, min_step, 0);
         minus_matrix = new THREE.Matrix4().makeTranslation(0, -min_step, 0);
+    } else if (direction == "right") {
+        matrix = new THREE.Matrix4().makeTranslation(0, 0, min_step);
+        minus_matrix = new THREE.Matrix4().makeTranslation(0, 0, -min_step);
     }
-    var iter_count = 1;
 
+    console.log("Translating " + direction + " ...");
     for (var iter = 0; iter < iter_count; iter++) {
-        //console.log("Transforming " + iter + " ...");
+        //console.log("Translating " + direction + " " + iter + " ...");
         for (var i = 0; i < polys.length; i++) {
 
             var convex = polys[i];
@@ -2012,7 +2306,7 @@ function transform(polys, container, direction) {
                     //console.log("Not Transformed " + iter + ": " + i);
                     break;
                 }
-                console.log("Translated " + iter + ": " + i);
+                //console.log("Translated " + iter + ": " + i);
 
             }
         }
@@ -2071,7 +2365,7 @@ function outPut(polys, containerVolume, use_engine) {
         }
 
     }
-    console.log("Rate: " + rate);
+    //console.log("Rate: " + rate);
 
     var interval = 4000;
     var g = 60;
@@ -2361,7 +2655,7 @@ function randomGenAndPutInCylinder(options) {
                     break;
 
                 case 2:
-                    // try transform
+                    // try translate
                     var xt = randomBetween(-15, 15),
                         yt = randomBetween(-15, 15),
                         zt = randomBetween(-15, 15),
