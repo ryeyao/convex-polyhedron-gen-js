@@ -365,9 +365,28 @@
 				for (var i = 0; i < recurCount; i++) {
 					console.log("Simulation iteration count: " + i);
 					outPut(randomFunc(options), containerVolume, use_engine);
-					translate(allConvex, container, "left", translate_iter_count);
-					translate(allConvex, container, "right", translate_iter_count);
-					translate(allConvex, container, "down", translate_iter_count);
+//					for (var j = 0; j < translate_iter_count; j++) {
+//						translate(allConvex, container, "left", 1);
+//						translate(allConvex, container, "right", 1);
+//						translate(allConvex, container, "down", 1);
+//					}
+					var z = 0, x = 0, y = 1;
+					var theta = 0, alpha = 0;
+					var fraction = 36;
+                    for (var j = 0; j < fraction / 2; j++) {
+						for (var k = 0; k < fraction; k++) {
+							theta += j / (Math.PI * 2);
+							alpha += k / (Math.PI * 2);
+							z = Math.sin(theta) * Math.cos(alpha);
+							x = Math.sin(theta) * Math.sin(alpha);
+							y = Math.abs(Math.cos(theta));
+							var matrix = new THREE.Matrix4().makeTranslation(x, -y, z);
+							var minus_matrix = new THREE.Matrix4().makeTranslation(-x, y, -z);
+//							var matrix = new THREE.Vector3(x, -y, z);
+//							var minus_matrix = new THREE.Vector3(-x, y, -z);
+							translate(allConvex, container, "", translate_iter_count, matrix, minus_matrix);
+						}
+                    }
 				}
 				writeResult();
 			}
