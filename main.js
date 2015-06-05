@@ -47,23 +47,19 @@ app.on('ready', function() {
 ipc.on('synchronous-message', function(event, content) {
   //console.log(arg);  // prints "ping"
 
-  fs.writeFile('result', content.result, function(err) {
-    if (err) {
-      console.log(err);
+  var result_fname = "result";
+  var statistics_fname = "statistics";
+  if (process.argv[2]) {
+    result_fname = process.argv[2];
+    if (process.argv[3]) {
+      statistics_fname = process.argv[3];
     }
-    else {
-      console.log("Polyhedrons are written to file [result]");
-    }
-  });
+  }
+  fs.writeFileSync(result_fname, content.result);
+  console.log("Polyhedrons are written to file [" + result_fname + "]");
 
-  fs.writeFile('statistics', content.statistics, function(err) {
-    if (err) {
-      console.log(err);
-    }
-    else {
-      console.log("Statistics are written to file [statistics]");
-    }
-  });
+  fs.writeFileSync(statistics_fname, content.statistics);
+  console.log("Statistics are written to file [" + statistics_fname + "]");
 
   event.returnValue = 'close';
 });

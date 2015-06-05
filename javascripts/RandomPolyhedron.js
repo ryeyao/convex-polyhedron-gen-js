@@ -615,7 +615,7 @@ function randomConvexNonIntersectedWithOpts(options, container, randomSphereFunc
         cumulative_ratio += options.polyhedrons[i].ratio;
         ratioes.push(cumulative_ratio);
     }
-    if (cumulative_ratio) {
+    if (cumulative_ratio != 1) {
         console.log("Warning: Cumulative ratio(" + cumulative_ratio + ") is not 1");
     }
 
@@ -637,7 +637,7 @@ function randomConvexNonIntersectedWithOpts(options, container, randomSphereFunc
             var sphere;
             var minR, maxR, radius;
             for (var r = 0; r < ratioes.length; r++) {
-                if (rand < ratioes[r]) {
+                if (rand <= ratioes[r]) {
                     minR = options.polyhedrons[r].radius.min;
                     maxR = options.polyhedrons[r].radius.max;
                     radius = maxR;
