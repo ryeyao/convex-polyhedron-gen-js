@@ -327,7 +327,15 @@
 				var rt = 0;
 
 				var result = "";
+				var statistics = "";
+
+				var levels = [];
+				for (var r in options.polyhedrons) {
+					levels.push(0);
+				}
+
 				for (var i = 9; i < allConvex.length; i++) {
+
 					var curr = allConvex[i];
 
 					var points = [];
@@ -354,11 +362,21 @@
 					rt = (vols / containerVolume) * 100;
 					console.log("Final Rate: " + rt + "%");
 
+					levels[curr.radius_level]++;
+
 				}
 
-				if (ipc.sendSync('synchronous-message', result) == "close") { // prints "pong"
+				statistics += "rate: " + rt + "%\n";
 
-//							window.close();
+				for (var r in options.polyhedrons) {
+					var curr_radius = options.polyhedrons[r].radius;
+					var curr_rate = (levels[r] / allConvex.length) * 100;
+					statistics += "[" + curr_radius.min + ", " + curr_radius.max + "]: " + curr_rate + "%\n";
+				}
+
+				if (ipc.sendSync('synchronous-message', {result: result, statistics: statistics}) == "close") { // prints "pong"
+
+					window.close();
 				}
 			}
 
