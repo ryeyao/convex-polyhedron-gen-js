@@ -139,10 +139,14 @@
 			var translate_iter_count = options.translate_iter_count;
 			var simulation_interval = options.simulation_interval;
 			var high_volume_ratio = options.high_volume_ratio;
+			// Box only
 			var edge_len = options.container.options.edge_len;
+			var edge_height = options.container.options.edge_height;
+			var edge_width = options.container.options.edge_width;
+
+			// Cylinder only
 			var radius = options.container.options.radius;
 			var height = options.container.options.height;
-
 
 
 			// Disable
@@ -151,7 +155,7 @@
 
 			var box = {
 				vertex3A: new THREE.Vector3(0, 0, 0),
-				vertex3B: new THREE.Vector3(edge_len, edge_len, edge_len)
+				vertex3B: new THREE.Vector3(edge_len, edge_height, edge_width)
 			};
 			var boxVolume = calcVolumeOfBox(box);
 
@@ -177,7 +181,7 @@
 				container = box;
 				containerVolume = calcVolumeOfBox({
 					vertex3A: new THREE.Vector3(0, 0, 0),
-					vertex3B: new THREE.Vector3(options.container.options.edge_len, options.container.options.edge_len, options.container.options.edge_len)
+					vertex3B: new THREE.Vector3(edge_len, edge_height, edge_width)
 				});
 				initFunc = initBoxScene;
 				requestAnimationFrame(render);
