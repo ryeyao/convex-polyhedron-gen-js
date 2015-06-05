@@ -616,7 +616,7 @@ function randomConvexNonIntersectedWithOpts(options, container, randomSphereFunc
         ratioes.push(cumulative_ratio);
     }
     if (cumulative_ratio) {
-        console.log("Warning: Cumulative ratio is not 1");
+        console.log("Warning: Cumulative ratio(" + cumulative_ratio + ") is not 1");
     }
 
     var polyhedrons = [];
@@ -635,14 +635,20 @@ function randomConvexNonIntersectedWithOpts(options, container, randomSphereFunc
             var rand = Math.random();
 
             var sphere;
+            var minR, maxR, radius;
             for (var r = 0; r < ratioes.length; r++) {
                 if (rand < ratioes[r]) {
-                    var minR = options.polyhedrons[r].radius.min;
-                    var maxR = options.polyhedrons[r].radius.max;
-                    sphere = randomSphereFunc(minR, maxR, container);
+                    minR = options.polyhedrons[r].radius.min;
+                    maxR = options.polyhedrons[r].radius.max;
+                    radius = maxR;
                     break;
                 }
             }
+
+            //sphere = randomSphereFunc(minR, maxR, container);
+            sphere = randomSphereFunc(radius, radius, container);
+            MAX_TRY_COUNT = maxR - minR;
+
             if (sphere == undefined) {
                 var minR = options.polyhedrons[0].radius.min;
                 var maxR = options.polyhedrons[0].radius.max;
@@ -656,6 +662,9 @@ function randomConvexNonIntersectedWithOpts(options, container, randomSphereFunc
 
 
                 if (needRegenerate) {
+                    if (sphere.radius < minR) {
+                        continue;
+                    }
                     convex = getBaseTetrahedronInSphere(sphere);
                     if (randomBetween(0, 1) < 0.5) {
                         convex.vertices.push(randomPointInSphere(sphere));
@@ -692,7 +701,8 @@ function randomConvexNonIntersectedWithOpts(options, container, randomSphereFunc
                     switch (THREE.Math.randInt(1, 1)) {
                         case 1:
                             // try scale the sphere
-                            sphere.radius *= randomBetween(min_scale, sphere.radius);
+                            //sphere.radius *= randomBetween(min_scale, sphere.radius);
+                            sphere.radius -= 1;
                             needRegenerate = true;
                             break;
 
@@ -753,6 +763,7 @@ function randomConvexNonIntersectedWithOpts(options, container, randomSphereFunc
 
                 // convex.boundingSphere = sphere;
 
+                convex.radius_level = r;
                 polyhedrons.push(convex);
 
                 if (polyhedrons.length < len_old) {
