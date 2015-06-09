@@ -1286,7 +1286,7 @@ function randomGenAndPut(options) {
         //console.log("_Rate: " + _rate);
         var object = THREE.SceneUtils.createMultiMaterialObject(convex, materials);
         polys.push(convex);
-        //allConvex.push(convex);
+
         // object.position.set(sphere.center.x, sphere.center.y, sphere.center.z);
         // object.position.set(convex.boundingSphere.center);
         // object.position.set(convex.boundingSphere.center.x, convex.boundingSphere.center.y, convex.boundingSphere.center.z)

@@ -1,36 +1,58 @@
 {
   "container": {
-    "type": "cube",
+    "type": "cylinder",
     "options": {
       "height": 150,
       "radius": 75,
-      "edge_len": 150
-    }
-  },
+      "edge_len": 150,
+      "edge_height": 100,
+      "edge_width": 150
 
-  "polyhedron": {
-    "radius": {
-      "min": 10,
-      "max": 20 
-    },
-    "sharpness": {
-      "min": 10,
-      "max": 20
-    },
-    "slenderness_ratio": {
-      "min": 1,
-      "max": 10
     }
   },
+  "polyhedron": {
+      "sharpness": {
+        "min": 10,
+        "max": 20
+      },
+      "slenderness_ratio": {
+        "min": 1,
+        "max": 10
+      }
+  },
+  "polyhedrons": [ 
+    {
+      "radius": {
+        "min": 15,
+        "max": 20 
+      },
+      "ratio": 0.4
+    },
+    {
+      "radius": {
+        "min": 5,
+        "max": 10 
+      },
+      "ratio": 0.3
+    },
+    {
+      "radius": {
+        "min": 10,
+        "max": 15
+      },
+      "ratio": 0.3
+    }
+  ],
 
   "show_window": true,
-  "random_iter_count": 10000,
-  "translate_iter_count": 5,
+  "random_iter_count": 10,
+  "translate_iter_count": 0,
+  "scan_step": 1,
 
   "high_volume_ratio": false,
 
   "enable_simulation": false,
-  "simulation_interval": 100000,
-  "simulation_iter_count": 50
+  "simulation_interval": 10000,
+  "simulation_iter_count": 100 
 
 }

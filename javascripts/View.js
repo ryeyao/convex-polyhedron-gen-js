@@ -237,7 +237,7 @@ function initBoxSceneThreejs(options) {
     light.position.set( 0, 1, 0 );
     scene.add( light );
 
-    view.camera.position.set(edge_len * 2, edge_height * 5, edge_width * 2);
+    view.camera.position.set(edge_len * 1.5, edge_height * 1.5, edge_width * 1.6);
 
 }
 function initCylinderSceneThreejs(options) {
@@ -265,7 +265,7 @@ function initCylinderSceneThreejs(options) {
     light.position.set( 0, 1, 0 );
     scene.add( light );
 
-    view.camera.position.set(radius * 2, height * 5, radius * 2);
+    view.camera.position.set(radius * 3, height, radius * 3);
 
 }
 function initBoxScenePhysijs(options) {

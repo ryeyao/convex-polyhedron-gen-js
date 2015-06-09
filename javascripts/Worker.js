@@ -19,8 +19,9 @@ function work(scene) {
         var show_window = false || options.show_window;
         var recurCount = options.simulation_iter_count;
         var translate_iter_count = options.translate_iter_count;
+        var translate_fraction_count = options.translate_fraction_count;
         var simulation_interval = options.simulation_interval;
-        var high_volume_ratio = options.high_volume_ratio;
+        var high_volume_ratio = false || options.high_volume_ratio;
         // Box only
         var edge_len = options.container.options.edge_len;
         var edge_height = options.container.options.edge_height;
@@ -54,7 +55,6 @@ function work(scene) {
             //requestAnimationFrame(render);
 //				scene.simulate();
             randomFunc = randomGenAndPut;
-            initFunc(options);
 
             if (high_volume_ratio) {
                 output2Phisijs(randomGenAndPutInCylinder(options), containerVolume, use_engine);
@@ -70,12 +70,13 @@ function work(scene) {
 //				scene.simulate();
 //				randomGenAndPutInSubBox3(options);
             randomFunc = randomGenAndPut;
-            initFunc(options);
             if (high_volume_ratio) {
                 output2Phisijs(randomGenAndPutInSubBox3(options), containerVolume, use_engine);
             }
         }
 
+        initFunc(options);
+        view.animate();
 
 //			if (options.container.type == "cylinder") {
 //
@@ -206,36 +207,49 @@ function work(scene) {
 
 
         function genAndTranslate(flags) {
-//					console.log("Simulation iteration count: " + flags.recur);
+			if (flags) {
+                console.log("Simulation iteration count: " + flags.recur);
+            }
             output2Threejs(randomFunc(options), scene, containerVolume, options);
 //					for (var j = 0; j < translate_iter_count; j++) {
 //						translate(allConvex, container, "left", 1);
 //						translate(allConvex, container, "right", 1);
 //						translate(allConvex, container, "down", 1);
 //					}
-            var z = 0, x = 0, y = 1;
-            var theta = 0, alpha = 0;
-            var fraction = 2;
-            for (var j = 0; j < fraction / 2; j++) {
-                for (var k = 0; k < fraction; k++) {
-                    theta += j / (Math.PI * 2);
-                    alpha += k / (Math.PI * 2);
-                    z = Math.sin(theta) * Math.cos(alpha);
-                    x = Math.sin(theta) * Math.sin(alpha);
-                    y = Math.abs(Math.cos(theta));
-                    var matrix = new THREE.Matrix4().makeTranslation(x, -y, z);
-                    var minus_matrix = new THREE.Matrix4().makeTranslation(-x, y, -z);
-//							var matrix = new THREE.Vector3(x, -y, z);
-//							var minus_matrix = new THREE.Vector3(-x, y, -z);
-                    translate(allConvex, container, "", translate_iter_count, matrix, minus_matrix);
+            console.log("Current rate: " + rate.toFixed(2) + "%");
+            if (rate < 20) {
+                var z = 0, x = 0, y = 1;
+                var theta = 0, alpha = 0;
+                var fraction = translate_fraction_count;
+                console.log("Translating ...");
+
+                for (var t = 0; t < translate_iter_count; t++) {
+                    for (var j = 0; j < fraction / 2; j++) {
+                        for (var k = 0; k < fraction; k++) {
+                            theta += j / (Math.PI * 2);
+                            alpha += k / (Math.PI * 2);
+                            z = Math.sin(theta) * Math.cos(alpha);
+                            x = Math.sin(theta) * Math.sin(alpha);
+                            y = Math.abs(Math.cos(theta));
+                            var matrix = new THREE.Matrix4().makeTranslation(x, -y, z);
+                            var minus_matrix = new THREE.Matrix4().makeTranslation(-x, y, -z);
+        //							var matrix = new THREE.Vector3(x, -y, z);
+        //							var minus_matrix = new THREE.Vector3(-x, y, -z);
+                            translate(allConvex, container, "", 1, matrix, minus_matrix);
+                        }
+                    }
+                    translate(allConvex, container, "down", 1, matrix, minus_matrix);
+
                 }
+            } else {
+                console.log("Stop translating.");
             }
 
             if (flags) {
                 flags.recur--;
                 if (flags.recur < 0) {
                     writeResult(options, containerVolume, allConvex);
-                    // return;
+                    return;
                 } else {
                     setTimeout(function () {
                         genAndTranslate(flags);
@@ -252,11 +266,11 @@ function work(scene) {
 
                 var flags = {recur: recurCount};
                 setTimeout(function () {
-                    console.log("settimeout");
                     genAndTranslate(flags);
-                }, 1);
+                }, 100);
             } else {
-                for (var i = 0; i < recurCount; i++) {
+                for (var i = recurCount; i > 0; i--) {
+                    console.log("Simulation iteration count: " + recurCount);
                     genAndTranslate(false);
                 }
                 writeResult(options, containerVolume, allConvex);
@@ -322,6 +336,7 @@ function output2Threejs(polys, scene, containerVolume, options) {
     //        }, interval);
     //    }, interval);
     //}, interval);
+    return rate;
 }
 
 function output2Phisijs(polys, scene, containerVolume, options) {
@@ -444,11 +459,12 @@ function writeResult(options, containerVolume, polys) {
 
         vols += calculate(curr);
         rt = (vols / containerVolume) * 100;
-        console.log("Final Rate: " + rt + "%");
 
         levels[curr.radius_level]++;
 
     }
+    console.log("Final Rate: " + rt + "%");
+
 
     statistics += "rate: " + rt + "%\n";
 
@@ -524,7 +540,6 @@ function translate(polys, container, direction, iter_count, matrix, minus_matrix
         minus_matrix = new THREE.Matrix4().makeTranslation(0, -min_step, -min_step);
     }
 
-    console.log("Translating " + direction + " ...");
     for (var iter = 0; iter < iter_count; iter++) {
         //console.log("Translating " + direction + " " + iter + " ...");
         for (var i = 0; i < polys.length; i++) {
@@ -561,6 +576,8 @@ function translate(polys, container, direction, iter_count, matrix, minus_matrix
                 //console.log("Translated " + iter + ": " + i);
 
             }
+            convex.dynamic = true;
+            convex.verticesNeedUpdate = true;
         }
     }
 
