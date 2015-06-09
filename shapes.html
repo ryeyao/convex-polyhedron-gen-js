@@ -10,6 +10,7 @@
 	<link rel="stylesheet" type="text/css" href="stylesheets/styles.css" />
 	
 	<script type="text/javascript" src="javascripts/three.min.js"></script>
+	<script type="text/javascript" src="javascripts/OrbitControls.js"></script>
 	<script type="text/javascript" src="javascripts/stats.js"></script>
 	<script type="text/javascript" src="javascripts/tween.js"></script>
 	<script type="text/javascript" src="javascripts/physi.js"></script>
@@ -22,459 +23,148 @@
 	<script type="text/javascript" src="javascripts/Point.js"></script>
 	<script type="text/javascript" src="javascripts/fileutils.js"></script>
 	<script type="text/javascript" src="javascripts/FileSaver.min.js"></script>
+	<script type="text/javascript" src="javascripts/Worker.js"></script>
+	<script type="text/javascript" src="javascripts/View.js"></script>
 
 	
 	<script type="text/javascript">
-	
-	'use strict';
-	
-	Physijs.scripts.worker = 'javascripts/physijs_worker.js';
-	Physijs.scripts.ammo = 'ammo.js';
-	
-	var initScene, render, createShape,
-		renderer, render_stats, physics_stats, scene, light, ground, ground_material, wall_material, camera, axis, isPaused, unpauseSimulation;
 
-	var total_volume = 0.0;
-	var box_volume = 0.0;
-	var rate = 0.0;
-	
-	initScene = function() {
-		TWEEN.start();
-		
-		renderer = new THREE.WebGLRenderer({ antialias: true });
-		renderer.setSize( window.innerWidth, window.innerHeight );
-		renderer.shadowMapEnabled = true;
-		renderer.shadowMapSoft = true;
-		document.getElementById( 'viewport' ).appendChild( renderer.domElement );
-		
-		render_stats = new Stats();
-		render_stats.domElement.style.position = 'absolute';
-		render_stats.domElement.style.top = '0px';
-		render_stats.domElement.style.zIndex = 100;
-		document.getElementById( 'viewport' ).appendChild( render_stats.domElement );
-		
-		physics_stats = new Stats();
-		physics_stats.domElement.style.position = 'absolute';
-		physics_stats.domElement.style.top = '50px';
-		physics_stats.domElement.style.zIndex = 100;
-		document.getElementById( 'viewport' ).appendChild( physics_stats.domElement );
-		
-		scene = new Physijs.Scene({ fixedTimeStep: 1 / 120 });
-		scene.setGravity(new THREE.Vector3( -30, -30, -30 ));
-		scene.addEventListener(
-			'update',
-			function() {
-				scene.simulate( undefined, 2 );
-				physics_stats.update();
-			}
-		);
-		
-		camera = new THREE.PerspectiveCamera(
-			35,
-			window.innerWidth / window.innerHeight,
-			1,
-			1000
-		);
-		// camera.position.set( 60, 50, 60 );
-		camera.position.set( 650, 350, 650 );
-//		camera.position.set( 450, 150, 450 );
-//		camera.position.set( 0, 850, 0 );
-//		camera.position.set( 450, 0, 450 );
+		var view = new ThreejsView();
 
-		camera.lookAt( scene.position );
-//		camera.lookAt( );
-		scene.add( camera );
+		view.animate();
+		work(view.scene);
+		view.animate();
 
-		// Axis
-		axis = new THREE.AxisHelper( 190 );
-		axis.position.set( 0, 0, 0 );
-		scene.add( axis );
-		
-		// Light
-		light = new THREE.DirectionalLight( 0xFFFFFF );
-		light.position.set( 100, 100, -15 );
-		light.target.position.copy( scene.position );
-		light.castShadow = false;
-		light.shadowCameraLeft = -60;
-		light.shadowCameraTop = -60;
-		light.shadowCameraRight = 60;
-		light.shadowCameraBottom = 60;
-		light.shadowCameraNear = 20;
-		light.shadowCameraFar = 200;
-		light.shadowBias = -.0001
-		light.shadowMapWidth = light.shadowMapHeight = 2048;
-		light.shadowDarkness = .7;
-		scene.add( light );
-		
-		// Materials
-		wall_material = Physijs.createMaterial(
-		//new THREE.MeshLambertMaterial( { ambient: 0xf6f6f6, transparent: true}),//, map: map } ),
-			new THREE.MeshBasicMaterial( { color: 0xffffff, wireframe: true, transparent: true, opacity: 1 } )
-		);
-		ground_material = Physijs.createMaterial(
-			new THREE.MeshLambertMaterial({ map: THREE.ImageUtils.loadTexture( 'images/rocks.jpg' ) }),
-			.8, // high friction
-			.4 // low restitution
-		);
-		ground_material.map.wrapS = ground_material.map.wrapT = THREE.RepeatWrapping;
-		ground_material.map.repeat.set( 2.5, 2.5 );
-		
-
-//		createShape();
-
-//		randomGenAndPutInSubBox3();
-
-		var ipc = require('ipc');
-//		ipc.send('options', 'options');
-//		ipc.on('options', function(event, options) {
-
-		readFile("../../cfg.json", function (options) {
-
-			var containerVolume = 0;
-//			console.log(JSON.stringify(options));
-			options = JSON.parse(options);
-			var type = options.container.type;
-			var use_engine = false || options.enable_simulation;
-			var recurCount = options.simulation_iter_count;
-			var translate_iter_count = options.translate_iter_count;
-			var simulation_interval = options.simulation_interval;
-			var high_volume_ratio = options.high_volume_ratio;
-			// Box only
-			var edge_len = options.container.options.edge_len;
-			var edge_height = options.container.options.edge_height;
-			var edge_width = options.container.options.edge_width;
-
-			// Cylinder only
-			var radius = options.container.options.radius;
-			var height = options.container.options.height;
-
-
-			// Disable
-			use_engine = false;
-			high_volume_ratio = false;
-
-			var box = {
-				vertex3A: new THREE.Vector3(0, 0, 0),
-				vertex3B: new THREE.Vector3(edge_len, edge_height, edge_width)
-			};
-			var boxVolume = calcVolumeOfBox(box);
-
-			var cylinder_geometry = new THREE.CylinderGeometry(radius, radius, height, 36);
-			var cylinder = new THREE.Mesh(cylinder_geometry);
-			var cylinderVolume = calcVolumeOfCylinder(cylinder_geometry);
-
-			var randomFunc, initFunc, container;
-
-			if (type == "cylinder") {
-				container = cylinder_geometry;
-				containerVolume = calcVolumeOfCylinder(new THREE.CylinderGeometry(options.container.options.radius, options.container.options.radius, options.container.options.height));
-				initFunc = initCylinderScene;
-				requestAnimationFrame(render);
-				scene.simulate();
-				randomFunc = randomGenAndPut;
-				initFunc(options);
-
-				if (high_volume_ratio) {
-					outPut(randomGenAndPutInCylinder(options), containerVolume, use_engine);
-				}
-			} else {
-				container = box;
-				containerVolume = calcVolumeOfBox({
-					vertex3A: new THREE.Vector3(0, 0, 0),
-					vertex3B: new THREE.Vector3(edge_len, edge_height, edge_width)
-				});
-				initFunc = initBoxScene;
-				requestAnimationFrame(render);
-				scene.simulate();
-//				randomGenAndPutInSubBox3(options);
-				randomFunc = randomGenAndPut;
-				initFunc(options);
-				if (high_volume_ratio) {
-					outPut(randomGenAndPutInSubBox3(options), containerVolume, use_engine);
-				}
-			}
-
-
-//			if (options.container.type == "cylinder") {
+//	'use strict';
 //
-//			} else {
-//				randomGenAndPut(options);
-//				outPut(containerVolume);
-//			}
-
-			var mainFunc = function() {
-
-				isPaused = true;
-
-				console.log("Iter: " + recurCount);
-				outPut(randomFunc(options), containerVolume, use_engine);
-				recurCount--;
-				// Get current geometries
-				if (use_engine) {
-					for (var i = 0; i < scene.children.length; i++) {
-						var curr = scene.children[i].geometry;
-						if (curr instanceof THREE.ConvexGeometry) {
-							var curr_matrix = scene.children[i].matrix;
-
-							curr.applyMatrix(curr_matrix);
-//							if (type == "cylinder") {
-//								if (isPolyhedronOutOfCylinder(cylinder_geometry, curr)) {
-//									scene.children[i] = scene.children[scene.children.length - 1];
-//									scene.children.pop();
-//									allConvex[allConvex.indexOf(curr)] = allConvex[allConvex.length - 1];
-//									allConvex.pop();
-////									scene.children.splice(i, 1);
-////									allConvex.splice(allConvex.indexOf(curr), 1);
-//									i--;
-//								}
-//							} else {
-//								if (isPolyhedronOutOfBox(box, curr)) {
-//									scene.children[i] = scene.children[scene.children.length - 1];
-//									scene.children.pop();
-//									allConvex[allConvex.indexOf(curr)] = allConvex[allConvex.length - 1];
-//									allConvex.pop();
-////									scene.children.splice(i, 1);
-////									allConvex.splice(allConvex.indexOf(curr), 1);
-//									i--;
-//								}
-//							}
-						}
-					}
-				}
-
-//				return function () {
-					if (recurCount > 0) {
-//						initFunc(options);
-//						console.log("RecurCount: " + recurCount);
-						scene.setGravity(new THREE.Vector3( randomBetween(-10, 10), randomBetween(-10, 10), randomBetween(-10, 10) ));
-						setTimeout(mainFunc, simulation_interval);
-						unpauseSimulation();
-					} else {
-						outPut(randomFunc(options), containerVolume, use_engine);
-						writeResult2();
-					}
-//				}
-
-			};
-
-			function writeResult2() {
-
-				var vols = 0;
-				var rt = 0;
-
-				var result = "";
-				for (var i = 9; i < scene.children.length; i++) {
-					var curr = scene.children[i].geometry;
-					if (curr instanceof THREE.ConvexGeometry) {
-						var curr_matrix = scene.children[i].matrix;
-
-						curr.applyMatrix(curr_matrix);
-						if (type == "cylinder") {
-							if (isPolyhedronOutOfCylinder(cylinder_geometry, curr)) {
-								scene.children[i] = scene.children[scene.children.length - 1];
-								scene.children.pop();
-//									scene.children.splice(i, 1);
-//									allConvex.splice(allConvex.indexOf(curr), 1);
-								i--;
-								continue;
-							}
-						} else {
-							if (isPolyhedronOutOfBox(box, curr)) {
-								scene.children[i] = scene.children[scene.children.length - 1];
-								scene.children.pop();
-//									scene.children.splice(i, 1);
-//									allConvex.splice(allConvex.indexOf(curr), 1);
-								i--;
-								continue;
-							}
-						}
-						var points = [];
-						for (var j = 0; j < curr.vertices.length; j++) {
-							points.push([curr.vertices[j].x, curr.vertices[j].y, curr.vertices[j].z]);
-						}
-
-						var faces = [];
-						for (var j = 0; j < curr.faces.length; j++) {
-							faces.push([curr.faces[j].a, curr.faces[j].b, curr.faces[j].c]);
-						}
-
-						result +=
-								"polyhedron("
-								+ "points="
-								+ JSON.stringify(points)
-								+ ","
-								+ "faces="
-								+ JSON.stringify(faces)
-								+ ""
-								+ ");\n";
-
-						vols += calculate(curr);
-						rt = (vols / containerVolume) * 100;
-						console.log("Final Rate: " + rt + "%");
-					}
-
-
-				}
-
-				if (ipc.sendSync('synchronous-message', result) == "close") { // prints "pong"
-
-//							window.close();
-				}
-			}
-			function writeResult() {
-
-				var vols = 0;
-				var rt = 0;
-
-				var result = "";
-				var statistics = "";
-
-				var levels = [];
-				for (var r in options.polyhedrons) {
-					levels.push(0);
-				}
-
-				for (var i = 9; i < allConvex.length; i++) {
-
-					var curr = allConvex[i];
-
-					var points = [];
-					for (var j = 0; j < curr.vertices.length; j++) {
-						points.push([curr.vertices[j].x, curr.vertices[j].y, curr.vertices[j].z]);
-					}
-
-					var faces = [];
-					for (var j = 0; j < curr.faces.length; j++) {
-						faces.push([curr.faces[j].a, curr.faces[j].b, curr.faces[j].c]);
-					}
-
-					result +=
-							"polyhedron("
-							+ "points="
-							+ JSON.stringify(points)
-							+ ","
-							+ "faces="
-							+ JSON.stringify(faces)
-							+ ""
-							+ ");\n";
-
-					vols += calculate(curr);
-					rt = (vols / containerVolume) * 100;
-					console.log("Final Rate: " + rt + "%");
-
-					levels[curr.radius_level]++;
-
-				}
-
-				statistics += "rate: " + rt + "%\n";
-
-				for (var r in options.polyhedrons) {
-					var curr_radius = options.polyhedrons[r].radius;
-					var curr_rate = (levels[r] / allConvex.length) * 100;
-					statistics += "[" + curr_radius.min + ", " + curr_radius.max + "]: " + curr_rate + "%\n";
-				}
-
-				if (ipc.sendSync('synchronous-message', {result: result, statistics: statistics}) == "close") { // prints "pong"
-
-					window.close();
-				}
-			}
-
-			if (use_engine) {
-				mainFunc();
-			} else {
-
-				for (var i = 0; i < recurCount; i++) {
-					console.log("Simulation iteration count: " + i);
-					outPut(randomFunc(options), containerVolume, use_engine);
-//					for (var j = 0; j < translate_iter_count; j++) {
-//						translate(allConvex, container, "left", 1);
-//						translate(allConvex, container, "right", 1);
-//						translate(allConvex, container, "down", 1);
-//					}
-					var z = 0, x = 0, y = 1;
-					var theta = 0, alpha = 0;
-					var fraction = 36;
-                    for (var j = 0; j < fraction / 2; j++) {
-						for (var k = 0; k < fraction; k++) {
-							theta += j / (Math.PI * 2);
-							alpha += k / (Math.PI * 2);
-							z = Math.sin(theta) * Math.cos(alpha);
-							x = Math.sin(theta) * Math.sin(alpha);
-							y = Math.abs(Math.cos(theta));
-							var matrix = new THREE.Matrix4().makeTranslation(x, -y, z);
-							var minus_matrix = new THREE.Matrix4().makeTranslation(-x, y, -z);
-//							var matrix = new THREE.Vector3(x, -y, z);
-//							var minus_matrix = new THREE.Vector3(-x, y, -z);
-							translate(allConvex, container, "", translate_iter_count, matrix, minus_matrix);
-						}
-                    }
-				}
-				writeResult();
-			}
-
-
-		});
-
-//		randomGenAndPut();
-//		function dosomething() {
-//			var allConvexs = randomGenAndPutInSubBox2();
-////		var allConvexs = randomGenAndPutInSubBox();
-//			var shape, material = new THREE.MeshLambertMaterial({opacity: 0, transparent: true});
-//			for (var i = 0; i < allConvexs.length; i++) {
-//				var curr = allConvexs[i];
-//				shape = new Physijs.ConvexMesh(
-//						curr,
-//						material
-//				);
+//	Physijs.scripts.worker = 'javascripts/physijs_worker.js';
+//	Physijs.scripts.ammo = 'ammo.js';
 //
-//				var volume = calculate(curr);
-//				total_volume += volume;
-//				rate = total_volume / box_volume;
-//				// console.log("Vertices: " + JSON.stringify(convex_geometry.vertices));
-//				console.log("Volume: " + volume);
-//				console.log("Rate: " + rate * 100 + "%")
-//				shape.material.color.setRGB(Math.random() * 100 / 100, Math.random() * 100 / 100, Math.random() * 100 / 100);
-//				shape.castShadow = false;
-//				shape.receiveShadow = false;
+//	var initScene, render, createShape,
+//		renderer, render_stats, physics_stats, scene, light, ground, ground_material, wall_material, camera, axis, isPaused, unpauseSimulation;
 //
-//				scene.add(shape);
+//	var total_volume = 0.0;
+//	var box_volume = 0.0;
+//	var rate = 0.0;
 //
-//				new TWEEN.Tween(shape.material).to({opacity: 1}, 500).start();
+//	initScene = function() {
+//		TWEEN.start();
 //
-//				document.getElementById('shapecount').textContent = i + ' shapes created';
-//			}
+//		renderer = new THREE.WebGLRenderer({ antialias: true });
+//		renderer.setSize( window.innerWidth, window.innerHeight );
+//		renderer.shadowMapEnabled = true;
+//		renderer.shadowMapSoft = true;
+//		document.getElementById( 'viewport' ).appendChild( renderer.domElement );
+//
+//		render_stats = new Stats();
+//		render_stats.domElement.style.position = 'absolute';
+//		render_stats.domElement.style.top = '0px';
+//		render_stats.domElement.style.zIndex = 100;
+//		document.getElementById( 'viewport' ).appendChild( render_stats.domElement );
+//
+//		physics_stats = new Stats();
+//		physics_stats.domElement.style.position = 'absolute';
+//		physics_stats.domElement.style.top = '50px';
+//		physics_stats.domElement.style.zIndex = 100;
+//		document.getElementById( 'viewport' ).appendChild( physics_stats.domElement );
+//
+////		scene = new Physijs.Scene({ fixedTimeStep: 1 / 120 });
+//		scene = new THREE.Scene();
+////		scene.setGravity(new THREE.Vector3( -30, -30, -30 ));
+////		scene.addEventListener(
+////			'update',
+////			function() {
+////				scene.simulate( undefined, 2 );
+////				physics_stats.update();
+////			}
+////		);
+//
+//		camera = new THREE.PerspectiveCamera(
+//			35,
+//			window.innerWidth / window.innerHeight,
+//			1,
+//			1000
+//		);
+//		// camera.position.set( 60, 50, 60 );
+//		camera.position.set( 650, 350, 650 );
+////		camera.position.set( 450, 150, 450 );
+////		camera.position.set( 0, 850, 0 );
+////		camera.position.set( 450, 0, 450 );
+//
+//		camera.lookAt( scene.position );
+////		camera.lookAt( );
+//		scene.add( camera );
+//
+//		// Axis
+//		axis = new THREE.AxisHelper( 190 );
+//		axis.position.set( 0, 0, 0 );
+//		scene.add( axis );
+//
+//		// Light
+//		light = new THREE.DirectionalLight( 0xFFFFFF );
+//		light.position.set( 100, 100, -15 );
+//		light.target.position.copy( scene.position );
+//		light.castShadow = false;
+//		light.shadowCameraLeft = -60;
+//		light.shadowCameraTop = -60;
+//		light.shadowCameraRight = 60;
+//		light.shadowCameraBottom = 60;
+//		light.shadowCameraNear = 20;
+//		light.shadowCameraFar = 200;
+//		light.shadowBias = -.0001
+//		light.shadowMapWidth = light.shadowMapHeight = 2048;
+//		light.shadowDarkness = .7;
+//		scene.add( light );
+//
+//		// Materials
+//		wall_material = Physijs.createMaterial(
+//		//new THREE.MeshLambertMaterial( { ambient: 0xf6f6f6, transparent: true}),//, map: map } ),
+//			new THREE.MeshBasicMaterial( { color: 0xffffff, wireframe: true, transparent: true, opacity: 1 } )
+//		);
+//		ground_material = Physijs.createMaterial(
+//			new THREE.MeshLambertMaterial({ map: THREE.ImageUtils.loadTexture( 'images/rocks.jpg' ) }),
+//			.8, // high friction
+//			.4 // low restitution
+//		);
+//		ground_material.map.wrapS = ground_material.map.wrapT = THREE.RepeatWrapping;
+//		ground_material.map.repeat.set( 2.5, 2.5 );
+//
+//
+////		createShape();
+//
+////		randomGenAndPutInSubBox3();
+//
+//		work(scene);
+//
+//	};
+//
+//	render = function() {
+//		var timer = Date.now() * 0.0006;
+//
+//		camera.position.x = Math.cos( timer ) * 650;
+//		//camera.position.y = Math.sin( timer ) * 200;
+//		// // camera.position.y = 0;
+//		camera.position.z = Math.sin( timer ) * 650;
+//		//camera.position.x = 800;
+//		//camera.position.z = 800;
+//
+//		//camera.lookAt( scene.position );
+//		camera.lookAt({x: 75, y: 75, z: 75});
+//
+//		if (!isPaused) {
+//			scene.simulate();
 //		}
-
-	};
-	
-	render = function() {
-		var timer = Date.now() * 0.0006;
-
-		camera.position.x = Math.cos( timer ) * 650;
-		//camera.position.y = Math.sin( timer ) * 200;
-		// // camera.position.y = 0;
-		camera.position.z = Math.sin( timer ) * 650;
-		//camera.position.x = 800;
-		//camera.position.z = 800;
-
-		//camera.lookAt( scene.position );
-		camera.lookAt({x: 75, y: 75, z: 75});
-
-		if (!isPaused) {
-			scene.simulate();
-		}
-		requestAnimationFrame( render );
-		renderer.render( scene, camera );
-		render_stats.update();
-	};
-
-	unpauseSimulation = function() {
-		isPaused = false;
-		scene.onSimulationResume();
-	};
-
-	window.onload = initScene;
+//		requestAnimationFrame( render );
+//		renderer.render( scene, camera );
+//		render_stats.update();
+//	};
+//
+//	unpauseSimulation = function() {
+//		isPaused = false;
+//		scene.onSimulationResume();
+//	};
+//
+//	window.onload = initScene;
 	
 	</script>
 </head>
