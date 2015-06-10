@@ -1,6 +1,6 @@
 {
   "container": {
-    "type": "cylinder",
+    "type": "cube",
     "options": {
       "height": 150,
       "radius": 75,
@@ -45,14 +45,10 @@
   ],
 
   "show_window": true,
-  "random_iter_count": 10,
-  "translate_iter_count": 0,
-  "scan_step": 1,
+  "random_iter_count": 500,
+  "translate_iter_count": 1,
+  "translate_fraction_count": 10,
 
-  "high_volume_ratio": false,
-
-  "enable_simulation": false,
-  "simulation_interval": 10000,
-  "simulation_iter_count": 100 
+  "simulation_iter_count": 15 
 
 }
