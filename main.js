@@ -14,8 +14,9 @@ app.on('window-all-closed', function() {
 
 var fs = require('fs');
 var ipc = require('ipc');
+var path = require('path');
 
-var cfg_path = "../cfg.json";
+var cfg_path = "cfg.json";
 var content, options;
 
 app.on('ready', function() {
@@ -23,7 +24,7 @@ app.on('ready', function() {
   ipc.on('options', function(event, msg) {
 
     if (process.argv[4]) {
-      cfg_path = process.argv[4];
+      cfg_path = path.join(process.cwd(), process.argv[4]);
     }
     //event.sender.send("options-got", options);
     event.returnValue = cfg_path;
@@ -53,9 +54,9 @@ ipc.on('synchronous-message', function(event, content) {
   var result_fname = "result";
   var statistics_fname = "statistics";
   if (process.argv[2]) {
-    result_fname = process.argv[2];
+    result_fname = path.join(process.cwd(), process.argv[2]);
     if (process.argv[3]) {
-      statistics_fname = process.argv[3];
+      statistics_fname = path.join(process.cwd(), process.argv[3]);
     }
   }
   fs.writeFileSync(result_fname, content.result);

@@ -8,7 +8,7 @@ function work(scene) {
     var options;
     console.log(opt_path);
 
-    readFile('../' + opt_path, function (opt) {
+    readFile(opt_path, function (opt) {
 
         options = opt;
         var containerVolume = 0;
@@ -201,7 +201,7 @@ function work(scene) {
 
             if (ipc.sendSync('synchronous-message', result) == "close") { // prints "pong"
 
-//							window.close();
+							window.close();
             }
         }
 
@@ -476,7 +476,7 @@ function writeResult(options, containerVolume, polys) {
 
     if (ipc.sendSync('synchronous-message', {result: result, statistics: statistics}) == "close") { // prints "pong"
 
-        // window.close();
+         window.close();
     }
 }
 
